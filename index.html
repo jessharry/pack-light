@@ -1,0 +1,1571 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<title>Pack Light</title>
+<meta name="description" content="Pack Light — a working prototype by Jessica Harry.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Tinos:ital,wght@0,400;0,700;1,400&family=M+PLUS+Rounded+1c:wght@400&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --page:#e9e4da; --page-ink:#343434; --page-muted:#6b6b6b;
+  --bg:#fffdf9; --bar:#fffdfc; --ink:#343434; --ink2:#1a1a1a; --muted:#6b6b6b;
+  --green:#0f4b32; --green2:#1f4f3d; --green3:#1a4332; --green4:#143524; --berry:#a8336b; --gold:#d4a857;
+  --line:#e9e9e9; --card:#fefefe; --tile:rgba(223,215,203,.62); --cream:#f0e8db;
+  --times:"Times New Roman",Tinos,Times,serif;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --page:#171a18; --page-ink:#e8e4dc; --page-muted:#a6aca6; } }
+:root[data-theme="dark"]{ --page:#171a18; --page-ink:#e8e4dc; --page-muted:#a6aca6; }
+html,body{height:100%}
+body{margin:0;background:var(--page);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;color:var(--ink)}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+input,textarea{font:inherit;color:inherit}
+
+/* ---------- page shell ---------- */
+.shell{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;gap:56px;padding:20px 16px}
+.aside{max-width:300px;color:var(--page-ink)}
+.aside .eyebrow{font:700 11px Inter;letter-spacing:1.6px;text-transform:uppercase;color:var(--berry);margin:0 0 12px}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .aside .eyebrow{color:#e38cb4} }
+:root[data-theme="dark"] .aside .eyebrow{color:#e38cb4}
+.aside h1{font:400 44px/1 var(--times);margin:0 0 14px}
+.aside h1 i{font-style:italic}
+.aside p{font:400 14px/1.55 Inter;color:var(--page-muted);margin:0 0 14px}
+.aside a{color:var(--page-ink);font-weight:600}
+.aside .reset{font:600 12px Inter;color:var(--page-muted);text-decoration:underline;margin-top:6px}
+@media (max-width:860px){ .aside{display:none} }
+.frame{position:relative;flex:none}
+/* iPhone 16 — Black, matching the Figma prototype device */
+#phone{position:absolute;left:0;top:0;width:428px;height:888px;transform-origin:0 0;padding:18px;border-radius:70px;background:#0a0a0b;
+  box-shadow:inset 0 0 0 2px #3a3b3e,inset 0 0 0 4px #1c1d1f,inset 0 0 0 5.5px #0a0a0b,0 0 0 1px #202123,0 36px 80px rgba(0,0,0,.28),0 10px 24px rgba(0,0,0,.18)}
+#phone .hw{position:absolute;background:linear-gradient(90deg,#232427,#3a3b3f 50%,#232427);border-radius:2px}
+#phone .hw.l{left:-3px;width:3px}#phone .hw.r{right:-3px;width:3px}
+#phone .hw.cc{right:-2px;width:2px;background:#2a2b2e}
+#device{position:relative;width:392px;height:852px;background:var(--bg);border-radius:53px;overflow:hidden;isolation:isolate}
+.island{position:absolute;left:50%;top:11px;width:125px;height:36px;margin-left:-62.5px;border-radius:18px;background:#000;z-index:200;pointer-events:none}
+.island::after{content:"";position:absolute;right:13px;top:12px;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#2d3a52 0,#111726 45%,#050608 70%)}
+body.mobile .shell{padding:0}
+body.mobile #phone{padding:0;border-radius:0;background:none;box-shadow:none;width:auto;height:auto}
+body.mobile #phone .hw,body.mobile .island{display:none}
+body.mobile #device{border-radius:0}
+
+/* ---------- screen primitives ---------- */
+.screen{position:absolute;inset:0;background:var(--bg);overflow:hidden}
+.scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.canvas{position:relative;width:392px}
+.a{position:absolute}
+.t{position:absolute;display:flex;align-items:center;white-space:nowrap;line-height:normal;pointer-events:none}
+.t.wrap{white-space:normal;align-items:flex-start}
+.t.c{justify-content:center;text-align:center}
+.t.r{justify-content:flex-end;text-align:right}
+.img{position:absolute;display:block;pointer-events:none;user-select:none}
+.hit{position:absolute;display:block;background:transparent;border-radius:10px}
+.hit:focus-visible,.btn:focus-visible{outline:2px solid var(--berry);outline-offset:2px}
+.fullimg{position:absolute;left:0;top:0;width:392px;height:852px}
+.status{position:absolute;left:0;top:0;width:392px;height:45px;z-index:30;pointer-events:none}
+.nav{position:absolute;left:0;bottom:0;width:392px;height:131px;z-index:30;background:#fffdfc}
+.nav::before{content:"";position:absolute;left:0;top:0;width:392px;height:1px;background:#e5e5e5}
+.nav button{position:absolute;top:0;height:80px;width:98px}
+.btn{position:absolute;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.chip-press:active,.btn:active{filter:brightness(.96)}
+.cat-scroll{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;cursor:grab}
+.cat-scroll::-webkit-scrollbar{display:none}
+.cat-scroll.dragging{cursor:grabbing;scroll-behavior:auto}
+.cat-scroll.dragging button{pointer-events:none}
+.wx-card{background:#fff;border:1.5px solid #e5e5e5;border-radius:14px;transition:border-color .15s,background .15s,transform .1s}
+.wx-card[aria-pressed="true"]{border-color:#1a4332;background:#f7faf8}
+.wx-card:active{transform:scale(.985)}
+.wx-radio{width:22px;height:22px;border-radius:50%;border:1.5px solid #c9c9c9;pointer-events:none;display:flex;align-items:center;justify-content:center;transition:border-color .15s}
+.wx-radio svg{opacity:0;transform:scale(.5);transition:opacity .15s,transform .18s}
+.wx-radio.on{border-color:#0f4b32}.wx-radio.on svg{opacity:1;transform:none}
+.wx-range{position:absolute;height:28px;margin:0;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;touch-action:none}
+.wx-range::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,#3f7de0 var(--p),#e3e3e3 var(--p))}
+.wx-range::-moz-range-track{height:4px;border-radius:2px;background:linear-gradient(90deg,#3f7de0 var(--p),#e3e3e3 var(--p))}
+.wx-range::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#3f7de0;margin-top:-4px;border:0;transition:transform .12s}
+.wx-range::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#3f7de0;border:0}
+.wx-range:active::-webkit-slider-thumb{transform:scale(1.5)}
+.wx-range.unset::-webkit-slider-runnable-track{background:#e3e3e3}.wx-range.unset::-moz-range-track{background:#e3e3e3}
+.wx-range.unset::-webkit-slider-thumb{opacity:0}.wx-range.unset::-moz-range-thumb{opacity:0}
+
+.fade{animation:fade .22s ease both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.fade,.sheet,.toast{animation:none!important}}
+
+/* sheets & toast */
+.overlay{position:absolute;inset:0;background:rgba(52,52,52,.5);z-index:50;animation:fade .2s ease both}
+.sheet{position:absolute;left:0;width:392px;background:#fffdfc;border-radius:38px 38px 0 0;z-index:51;animation:up .26s cubic-bezier(.2,.8,.2,1) both}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.grab{position:absolute;left:176px;top:10px;width:40px;height:4px;border-radius:2px;background:#d9d9d9}
+.toast{position:absolute;z-index:80;left:50%;transform:translateX(-50%);top:77px;height:46px;padding:0 26px;border-radius:18px;background:#0f4b32;border:1px solid #78988b;color:#fff;font:600 13px Inter;display:flex;align-items:center;white-space:nowrap;animation:toast 2.2s ease both;box-shadow:0 0 0 3px rgba(255,253,249,.9),0 8px 22px rgba(0,0,0,.22)}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-8px)}10%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+
+/* inputs */
+.field{position:absolute;background:#fff;border:1.5px solid #e5e5e5;border-radius:12px;padding:0 16px;font:400 15px Inter;color:#1a1a1a;outline:none}
+.field:focus{border-color:#1a4332}
+.note{position:absolute;background:#fffdf9;border:1px solid #e9e9e9;border-radius:7px;padding:8px 13px;font:400 12px Inter;color:#6a6a6a;resize:none;outline:none}
+.toggle{position:absolute;width:48px;height:28px;border-radius:999px;background:#c9c9c9;transition:background .2s}
+.toggle::after{content:"";position:absolute;left:3px;top:2px;width:24px;height:24px;border-radius:50%;background:#e5e5e5;transition:transform .2s,background .2s}
+.toggle.on{background:#1f4f3d}.toggle.on::after{transform:translateX(18px);background:#fff}
+
+/* recap */
+.swipe{scroll-snap-type:y proximity}
+.sharepv [data-act^="yirshare"]{display:none}
+.cardsnap{scroll-snap-align:start}
+</style>
+
+</head>
+<body>
+<div class="shell">
+  <div class="aside">
+    <p class="eyebrow">Working prototype</p>
+    <h1>Pack <i>Light</i></h1>
+    <p>An iOS packing app that learns what you actually wear. Everything here runs: add trips, build your closet, confirm what you wore, and watch your packing story and Year in Review fill in.</p>
+    <p>Your changes save in this browser only. After you sign in, tap <b>Try with demo data</b> to explore a full closet and a year of trips.</p>
+    <p><a href="https://www.jessicaharry.com/pack-light" target="_top">Read the case study →</a></p>
+    <p style="font-size:12px">Designed and built by Jessica Harry.</p>
+    <button class="reset" id="restart">Restart the prototype</button>
+  </div>
+  <div class="frame" id="frame"><div id="phone"><span class="hw l" style="top:160px;height:34px"></span><span class="hw l" style="top:222px;height:62px"></span><span class="hw l" style="top:298px;height:62px"></span><span class="hw r" style="top:236px;height:96px"></span><span class="hw cc" style="top:500px;height:64px"></span><div id="device"></div><div class="island" aria-hidden="true"></div></div></div>
+</div>
+
+<input type="file" id="file" accept="image/*" hidden>
+<input type="file" id="icsfile" accept=".ics,text/calendar" hidden>
+
+<script>
+/* ============================================================
+   Pack Light — working prototype
+   Layout coordinates follow the Figma frames 1:1 (392 × 852).
+   ============================================================ */
+const A = '';
+const $ = s => document.querySelector(s);
+const dev = $('#device');
+
+/* ---------- storage ---------- */
+const KEY = 'packlight.v1';
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) } catch (e) { return null } };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) {} };
+
+/* ---------- catalog of photographed pieces (from the Figma closet) ---------- */
+// ox/oy/w/h = where the photo sits inside the 168×168 closet card
+const PHOTOS = {
+  blue_bd:     {name:'Blue Button-Down', cat:'Tops',        type:'Button-Down', color:'Light blue', colorHex:'#cfe5f9', material:'Cotton',  ox:35, oy:24, w:100, h:119},
+  white_tee:   {name:'White T-Shirt',    cat:'Tops',        type:'T-Shirt',     color:'White',      colorHex:'#ffffff', material:'Cotton',  ox:29, oy:30, w:115, h:107},
+  black_tee:   {name:'Black Tee',        cat:'Tops',        type:'T-Shirt',     color:'Black',      colorHex:'#1a1a1a', material:'Cotton',  ox:32, oy:29, w:111, h:114},
+  blazer:      {name:'Black Blazer',     cat:'Outerwear',   type:'Blazer',      color:'Black',      colorHex:'#1a1a1a', material:'Wool',    ox:32, oy:29, w:115, h:122},
+  trousers:    {name:'Black Trousers',   cat:'Bottoms',     type:'Trousers',    color:'Black',      colorHex:'#1a1a1a', material:'Wool',    ox:53, oy:23, w:65,  h:120},
+  khaki:       {name:'Khaki Pants',      cat:'Bottoms',     type:'Chinos',      color:'Tan',        colorHex:'#d3bfa5', material:'Cotton',  ox:50, oy:30, w:69,  h:120},
+  sneakers:    {name:'White Sneakers',   cat:'Shoes',       type:'Sneakers',    color:'White',      colorHex:'#ffffff', material:'Leather', ox:30, oy:53, w:110, h:62},
+  black_shoes: {name:'Black Shoes',      cat:'Shoes',       type:'Oxfords',     color:'Black',      colorHex:'#1a1a1a', material:'Leather', ox:32, oy:40, w:110, h:88},
+  white_bd:    {name:'White Button-Down',cat:'Tops',        type:'Button-Down', color:'White',      colorHex:'#ffffff', material:'Cotton',  ox:35, oy:23, w:102, h:124},
+  grey_sweater:{name:'Grey Sweater',     cat:'Tops',        type:'Sweater',     color:'Grey',       colorHex:'#9c9c9c', material:'Wool',    ox:32, oy:25, w:111, h:116},
+  belt:        {name:'Brown Belt',       cat:'Accessories', type:'Belt',        color:'Brown',      colorHex:'#5c4c4d', material:'Leather', ox:31, oy:28, w:117, h:117},
+  watch:       {name:'Dress Watch',      cat:'Accessories', type:'Watch',       color:'Black',      colorHex:'#1a1a1a', material:'Steel',   ox:39, oy:31, w:93,  h:105},
+  teal_tee:    {name:'Teal Tee',         cat:'Tops',        type:'T-Shirt',     color:'Teal',       colorHex:'#105979', material:'Cotton',  ox:27, oy:29, w:118, h:118},
+  green_shorts:{name:'Green Shorts',     cat:'Bottoms',     type:'Shorts',      color:'Green',      colorHex:'#1b3a3f', material:'Nylon',   ox:24, oy:29, w:119, h:119},
+  grey_hoodie: {name:'Grey Hoodie',      cat:'Tops',        type:'Hoodie',      color:'Grey',       colorHex:'#9c9c9c', material:'Cotton',  ox:27, oy:15, w:115, h:143},
+  grey_joggers:{name:'Grey Joggers',     cat:'Bottoms',     type:'Joggers',     color:'Grey',       colorHex:'#9c9c9c', material:'Cotton',  ox:48, oy:29, w:75,  h:125},
+  white_shirt: {name:'White Oxford',     cat:'Tops',        type:'Button-Down', color:'White',      colorHex:'#ffffff', material:'Cotton',  ox:24, oy:22, w:121, h:123},
+};
+const WEIGHT = {Tops:.35, Bottoms:.7, Shoes:1.6, Outerwear:1.4, Accessories:.25}; // lbs, for carry-on fit
+
+const COLORS = ['#ffffff','#1a1a1a','#9c9c9c','#d3bfa5','#105979','#fff3dd','#1b3a3f','#cfe5f9','#5c4c4d'];
+const COLOR_NAMES = {'#ffffff':'White','#1a1a1a':'Black','#9c9c9c':'Grey','#d3bfa5':'Tan','#105979':'Teal','#fff3dd':'Cream','#1b3a3f':'Green','#cfe5f9':'Light blue','#5c4c4d':'Brown'};
+const SEASONS = ['Spring','Summer','Fall','Winter'];
+const USES = ['Work','Casual','Travel','Dinner','Beach','Going Out','Meetings','Hike','Museum','Sightseeing','Shopping'];
+const CATS = ['All','Tops','Bottoms','Shoes','Outerwear','Accessories'];
+const BAGS = [['Carry-on','bag_carry',15,27],['Medium checked','bag_medium',18,25],['Large checked','bag_large',17,29],['Briefcase','bag_brief',23,21],['Backpack','bag_back',17,21],['Purse','bag_purse',17,19],['Tote','bag_tote',20,21],['Duffel','bag_duffel',21,15]];
+const ACTS = [['Meetings','act_meet',23,21],['Dinner','act_dinner',24,24],['Hike','act_hike',24,24],['Sightseeing','act_sight',24,24],['Museum','act_museum',24,24],['Night Out','act_night',24,24],['Travel Day','act_travel',24,24],['Exercise','act_exercise',24,18],['Beach','act_beach',24,24],['Other',null,0,0]];
+const STYLES = ['Minimalist','Classic','Casual','Bohemian','Edgy','Romantic','Sporty','Preppy','Trendy','Vintage','Streetwear','Coastal'];
+const DEFAULT_ESSENTIALS = {Toiletries:['Toothbrush','Toothpaste','Deodorant','Face wash','Moisturizer','Sunscreen','ID'], Tech:['Phone charger','Airpods','Laptop charger','Portable battery','Watch charger'], Basics:['Socks','Underwear']};
+const CITY_PHOTOS = {'new york':'th_ny','chicago':'th_chicago','miami':'th_miami','london':'th_london'};
+
+/* ---------- state ---------- */
+const blank = () => ({
+  v:1, signedIn:false, provider:null, onboarded:false, cardDismissed:false, demo:false,
+  user:{name:'Sample User', email:'sample.user@example.com'},
+  items:[], outfits:[], trips:[],
+  prefs:{styles:[], colors:[], weather:null, temp:70, essentials:{Toiletries:[],Tech:[],Basics:[]}, alerts:false, calendar:false},
+  history:null, seq:1
+});
+let S = load() || blank();
+const id = p => p + (S.seq++);
+
+function demoData() {
+  const d = blank();
+  Object.assign(d, {signedIn:true, provider:'Google', onboarded:true, cardDismissed:true, demo:true});
+  const order = ['blue_bd','white_tee','black_tee','blazer','khaki','trousers','sneakers','black_shoes','white_bd','grey_sweater','belt','watch','teal_tee','green_shorts','grey_hoodie','grey_joggers'];
+  const fav = {blue_bd:1, khaki:1, sneakers:1, black_shoes:1};
+  const baseWears = {blue_bd:9, white_tee:24, black_tee:0, blazer:1, khaki:4, trousers:3, sneakers:9, black_shoes:8, white_bd:1, grey_sweater:5, belt:6, watch:8, teal_tee:1, green_shorts:1, grey_hoodie:6, grey_joggers:3};
+  const uses = {blue_bd:['Work','Dinner','Meetings'], white_tee:['Casual','Travel'], black_tee:['Casual'], blazer:['Work','Dinner','Meetings','Going Out'], khaki:['Work','Casual','Travel'], trousers:['Work','Dinner','Meetings'], sneakers:['Casual','Travel','Sightseeing'], black_shoes:['Work','Dinner','Meetings'], white_bd:['Work','Dinner','Meetings'], grey_sweater:['Casual','Travel'], belt:['Work','Meetings'], watch:['Work','Dinner','Going Out'], teal_tee:['Casual','Beach'], green_shorts:['Beach','Hike'], grey_hoodie:['Casual','Travel'], grey_joggers:['Travel','Casual'], white_shirt:['Work','Dinner','Meetings']};
+  d.items = order.map((k, i) => ({id:'i'+(i+1), photo:k, ...pick(PHOTOS[k]), fav:!!fav[k], seasons:['Spring','Summer','Fall','Winter'].filter((s,j)=> k.includes('shorts')||k.includes('tee') ? j<2 : true), uses:uses[k], wears:baseWears[k], packedCount:Math.max(baseWears[k], k==='black_tee'?2:baseWears[k]), loved: k==='blue_bd'?9:0, added:'2026-01-0'+(1+i%9)}));
+  const I = k => d.items.find(x => x.photo === k).id;
+  d.outfits = [
+    {id:'o1', name:'Day 1 Meeting',     items:[I('blue_bd'),I('trousers'),I('black_shoes'),I('belt')], trip:'t1', fav:true,  wears:6},
+    {id:'o2', name:'Team Dinner',       items:[I('blue_bd'),I('trousers'),I('black_shoes'),I('blazer')], trip:'t1', fav:false, wears:3},
+    {id:'o3', name:'Day 2 Meeting',     items:[I('white_bd'),I('khaki'),I('black_shoes'),I('belt')], trip:'t1', fav:false, wears:2},
+    {id:'o4', name:'Conference Dinner', items:[I('white_bd'),I('trousers'),I('black_shoes'),I('blazer')], trip:'t1', fav:false, wears:2},
+    {id:'o5', name:'Travel Day',        items:[I('white_bd'),I('khaki'),I('sneakers'),I('watch')], trip:'t1', fav:false, wears:2},
+  ];
+  const chicagoItems = ['blue_bd','white_bd','trousers','khaki','black_shoes','sneakers','belt','blazer','watch'].map(I);
+  const miami = ['teal_tee','green_shorts','white_bd','khaki','sneakers','black_shoes','belt','watch'].map(I);
+  const london = ['blue_bd','grey_sweater','trousers','khaki','black_shoes','sneakers','blazer','watch','belt','white_tee'].map(I);
+  d.trips = [
+    {id:'t4', name:'New York Work Trip', dest:'New York, NY', start:'2026-06-15', end:'2026-06-19', bags:['Carry-on','Briefcase'], acts:['Meetings','Dinner','Travel Day'], photo:'th_ny', items:[I('blue_bd'),I('trousers'),I('belt'),I('black_shoes')], packed:[], essentials:{}, outfits:['o1'], past:false},
+    {id:'t1', name:'Chicago Conference', dest:'Chicago, IL', start:'2026-06-08', end:'2026-06-12', bags:['Carry-on'], acts:['Meetings','Dinner','Travel Day'], photo:'th_chicago', items:chicagoItems, packed:chicagoItems.slice(), essentials:{}, outfits:['o1','o2','o3','o4','o5'], past:true, recap:null},
+    {id:'t2', name:'Miami Beach Trip', dest:'Miami, FL', start:'2026-05-18', end:'2026-05-21', bags:['Carry-on'], acts:['Beach','Dinner'], photo:'th_miami', items:miami, packed:miami.slice(), essentials:{}, outfits:[], looks:4, past:true, recap:{done:true}},
+    {id:'t3', name:'London Work Trip', dest:'London, UK', start:'2026-04-25', end:'2026-04-30', bags:['Carry-on'], acts:['Meetings','Sightseeing'], photo:'th_london', items:london, packed:london.slice(), essentials:{}, outfits:[], looks:6, past:true, recap:{done:true}},
+  ];
+  d.prefs = {styles:['Minimalist','Classic'], colors:['#1f4f3d','#f5e8d0','#2a3a6e'], weather:'hot', temp:70, essentials:{Toiletries:['Toothbrush','Toothpaste','Deodorant','Face wash'], Tech:['Phone charger','Laptop charger'], Basics:['Socks','Underwear']}, alerts:false, calendar:false};
+  // earlier trips this year, summarised (feeds the packing story + Year in Review)
+  d.history = {trips:5, carry:3, cities:{Chicago:2, Denver:1, Austin:1, Boston:1}, months:[1,0,1,2,0,0,0,0,0,0,0,0], itemsPerTrip:[11,10], first:{city:'Chicago', month:'January'}, colorPacked:{Grey:6}, colorWears:{Grey:16}};
+  d.seq = 100;
+  return d;
+}
+function pick(p){ const {name,cat,type,color,colorHex,material} = p; return {name,cat,type,color,colorHex,material}; }
+
+/* ---------- ui state ---------- */
+let U = {screen:null, params:{}, closetSeg:'All', cat:'All', filters:{cats:[],colors:[],seasons:[],uses:[]}, select:false, selected:[], sheet:null, tripTab:'Upcoming', outfitTrip:null, packTrip:null, draft:null};
+
+/* ---------- helpers ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const px = n => (typeof n === 'number' ? n + 'px' : n);
+const F = (w, s, fam='Inter', it) => `font:${it?'italic ':''}${w} ${s}px ${fam==='T'?'var(--times)':fam==='R'?"'M PLUS Rounded 1c',system-ui":'Inter'};`;
+function box(x, y, w, h, style='', inner='', attrs='') { return `<div class="a" style="left:${px(x)};top:${px(y)};${w!=null?`width:${px(w)};`:''}${h!=null?`height:${px(h)};`:''}${style}" ${attrs}>${inner}</div>`; }
+function txt(x, y, w, h, style, text, cls='') { return `<div class="t ${cls}" style="left:${px(x)};top:${px(y)};${w!=null?`width:${px(w)};`:''}${h!=null?`height:${px(h)};`:''}${style}">${text}</div>`; }
+function img(src, x, y, w, h, style='') { return `<img class="img" src="${src.startsWith('data:')||src.startsWith('blob:')?src:A+src}" alt="" style="left:${px(x)};top:${px(y)};width:${px(w)};height:${px(h)};${style}">`; }
+function hit(x, y, w, h, act, label='', style='') { return `<button class="hit" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;${style}" data-act="${act}" aria-label="${esc(label)}"></button>`; }
+function btn(x, y, w, h, style, inner, act, label='') { return `<button class="btn" style="left:${px(x)};top:${px(y)};width:${px(w)};height:${px(h)};${style}" data-act="${act}" ${label?`aria-label="${esc(label)}"`:''}>${inner}</button>`; }
+const item = id => S.items.find(i => i.id === id);
+const trip = id => S.trips.find(t => t.id === id);
+const outfit = id => S.outfits.find(o => o.id === id);
+const photoSrc = it => it.custom ? it.custom : 'it_' + it.photo + '.png';
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const pd = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const days = t => Math.max(1, Math.round((pd(t.end) - pd(t.start)) / 864e5));
+function range(t, style='long') {
+  const a = pd(t.start), b = pd(t.end);
+  if (style === 'sheet') return `${MONTHS[a.getMonth()]} ${a.getDate()} - ${MONTHS[b.getMonth()]} ${b.getDate()}, ${b.getFullYear()}`;
+  if (style === 'short') return a.getMonth()===b.getMonth() ? `${MON[a.getMonth()]} ${a.getDate()} – ${b.getDate()}, ${b.getFullYear()}` : `${MON[a.getMonth()]} ${a.getDate()} – ${MON[b.getMonth()]} ${b.getDate()}, ${b.getFullYear()}`;
+  if (style === 'md') return a.getMonth()===b.getMonth() ? `${MONTHS[a.getMonth()]} ${a.getDate()}-${b.getDate()}` : `${MON[a.getMonth()]} ${a.getDate()}-${MON[b.getMonth()]} ${b.getDate()}`;
+  return a.getMonth()===b.getMonth() ? `${MONTHS[a.getMonth()]} ${a.getDate()}-${b.getDate()}, ${b.getFullYear()}` : `${MON[a.getMonth()]} ${a.getDate()}-${MON[b.getMonth()]} ${b.getDate()}, ${b.getFullYear()}`;
+}
+const fmtDate = s => { const d = pd(s); return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; };
+const upcoming = () => S.trips.filter(t => !t.past).sort((a,b) => a.start.localeCompare(b.start));
+const past = () => S.trips.filter(t => t.past).sort((a,b) => b.start.localeCompare(a.start));
+const tripOutfits = t => (t.outfits||[]).map(outfit).filter(Boolean);
+const city = t => (t.dest||'').split(',')[0].trim();
+const tripPhoto = t => t.photo || CITY_PHOTOS[city(t).toLowerCase()] || null;
+
+/* ---------- shared chrome ---------- */
+const STATUS = `<img class="status" src="${A}statusbar.png" alt="">`;
+const NAVI = [
+  ['trips','Trips',   ['nv_trips_off',41,33,31],  ['nv_trips_on',43.5,28,26]],
+  ['closet','Closet', ['nv_closet_off',138,30,30],['nv_closet_on',139.8,26,28]],
+  ['packing','Packing',['nv_pack_off',240,20,32], ['nv_pack_on',240,23,27]],
+  ['profile','Profile',['nv_prof_off',335,29,28], ['nv_prof_on',335,27,30]],
+];
+function NAV(active) {
+  let h = `<nav class="nav">`;
+  NAVI.forEach(([k, label, off, on], i) => {
+    const [src, x, w, hh] = k === active ? on : off; const cx = 56 + i * 98;
+    h += `<img src="${A}${src}.png" alt="" style="position:absolute;left:${x}px;top:${53 - hh}px;width:${w}px;height:${hh}px">`;
+    h += `<span style="position:absolute;left:${cx-49}px;top:53px;width:98px;text-align:center;${F(k===active?600:400,11)}color:${k===active?'#1f4f3d':'#6b6b6b'}">${label}</span>`;
+    h += `<button style="left:${cx-49}px" data-act="tab:${k}" aria-label="${label}"${k===active?' aria-current="page"':''}></button>`;
+  });
+  return h + `</nav>`;
+}
+function scrollScreen(height, inner, {status=true, nav=null, after=''}={}) {
+  return `<div class="scroll" id="sc"><div class="canvas" style="height:${height}px">${inner}</div></div>${status?STATUS:''}${nav?NAV(nav):''}${after}`;
+}
+const back = (x, y, act='back') => img('ic_back.png', x, y, 15, 17) + hit(x-12, y-12, 40, 40, act, 'Back');
+
+/* ---------- toast ---------- */
+function toast(msg) {
+  const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg; el.setAttribute('role','status');
+  dev.appendChild(el); setTimeout(() => el.remove(), 2300);
+}
+
+/* ============================================================
+   SCREENS
+   ============================================================ */
+const R = {};
+
+/* ----- Flow 1: welcome & sign in (static art from the Figma frames) ----- */
+R.welcome = () => `<img class="fullimg" src="${A}scr_welcome.jpg" alt="Pack Light — The smarter way to pack. Plan trips, style outfits from your closet, and pack with confidence.">
+  ${hit(33,679,326,47,'go:signin','Get Started')}`;
+R.signin = () => `<img class="fullimg" src="${A}scr_signin.jpg" alt="Create your account">
+  ${hit(22,80,40,40,'go:welcome','Back')}
+  ${hit(34,298,326,43,'signin:Apple','Continue with Apple')}
+  ${hit(34,356,326,47,'signin:Google','Continue with Google')}
+  ${hit(34,416,326,43,'signin:Facebook','Continue with Facebook')}`;
+
+/* ----- Flow 2: tour ----- */
+R.tour = ({step=1}) => {
+  const last = step === 4;
+  return `<img class="fullimg fade" src="${A}scr_tour${step}.jpg" alt="Tour step ${step} of 4">
+    ${step===1?hit(300,70,60,40,'go:trips','Skip'):''}
+    ${hit(33,704,326,48,last?'tab:closet':'go:tour?step='+(step+1), last?'Go to Closet':'Next')}
+    ${hit(0,160,392,470,last?'tab:closet':'go:tour?step='+(step+1),'Next')}`;
+};
+
+/* ----- Trips tab ----- */
+R.trips = () => {
+  const up = upcoming(), ps = past();
+  const hasTrips = S.trips.length > 0;
+  let h = '';
+  h += txt(20, 78, 168, 31, F(400,36,'T')+'color:#343434', 'Trips');
+  h += btn(326, 72, 40, 44, F(400,32,'R')+'color:#000;line-height:1', '+', 'go:addtrip', 'Add a trip');
+  if (U.justSignedIn) h += `<div class="a fade" style="left:100px;top:77px;width:191px;height:46px;border-radius:18px;background:#0f4b32;border:1px solid #78988b;${F(600,13)}color:#fff;display:flex;align-items:center;justify-content:center;z-index:5">Signed in with ${esc(S.provider||'Google')}</div>`;
+  if (!hasTrips && !S.cardDismissed) return scrollScreen(852, h + onboardingCard(), {nav:'trips'});
+  h += txt(20, 132, 352, 17, F(500,14,'Inter',1)+'color:#a8336b', 'Plan and manage your trips');
+  if (!hasTrips) {
+    h += box(136, 262, 120, 120, 'border-radius:50%;background:#f5e8d0') + img('em_lug.png', 171.5, 293.0, 49, 58);
+    h += txt(20, 404, 352, 34, F(400,28,'T')+'color:#1a1a1a', 'No upcoming trips', 'c');
+    h += btn(136, 436, 120, 26, F(400,13)+'color:#6b6b6b', 'Add a trip now', 'go:addtrip');
+    return scrollScreen(852, h, {nav:'trips'});
+  }
+  // recap banner for the most recent past trip awaiting review
+  const pending = ps.find(t => !(t.recap && t.recap.done));
+  let top = 170;
+  if (U.tripTab === 'Past' && pending) {
+    h += box(18, 179, 358, 92, 'background:#1b4836;border-radius:15px');
+    h += img('ic_camera.png', 38, 211, 24, 24);
+    h += txt(69, 188, 250, 22, F(400,16,'T')+'color:#fffdfc', `How was ${esc(pending.name)}?`);
+    h += txt(69, 208, 200, 42, F(400,12)+'color:#fffdfc;line-height:19.5px', 'Confirm what you wore to<br>sharpen future packing.', 'wrap');
+    h += btn(292, 209, 69, 31, 'background:#fefefe;border:1px solid #4f7067;border-radius:15.5px;'+F(700,12)+'color:#0f4b32', 'Review', 'go:recap?id='+pending.id);
+    top = 286;
+  }
+  // tabs
+  const isUp = U.tripTab === 'Upcoming';
+  h += txt(90, top+4, 60, 22, F(600,12)+'color:#343434', 'Upcoming');
+  h += txt(247, top+4, 60, 22, F(600,12)+'color:#343434', 'Past');
+  h += box(50, top+28, 140, 3, `background:${isUp?'#1f4f3d':'#ecebe7'}`) + box(190, top+28, 140, 3, `background:${isUp?'#ecebe7':'#1f4f3d'}`);
+  h += hit(50, top-2, 140, 34, 'triptab:Upcoming', 'Upcoming trips') + hit(190, top-2, 140, 34, 'triptab:Past', 'Past trips');
+  let y = top + 60;
+  const list = isUp ? up : ps;
+  if (!list.length) {
+    h += txt(20, y+40, 352, 20, F(400,13)+'color:#8f8f8f', isUp ? 'No upcoming trips yet. Tap + to plan one.' : 'Trips you take will land here.', 'c');
+  }
+  list.forEach(t => { const r = tripCard(t, y, isUp); h += r.html; y += r.h + 16; });
+  return scrollScreen(Math.max(852, y + 140), h, {nav:'trips'});
+};
+
+function tripCard(t, T, withWeather) {
+  const pct = t.items.length ? Math.round(100 * t.packed.length / t.items.length) : 0;
+  const H = withWeather ? 154 : 105;
+  let h = box(16, T, 360, H, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:12px');
+  const ph = tripPhoto(t);
+  h += ph ? img(ph + '.jpg', 30, T+16, 67, 73, 'border-radius:7px;object-fit:cover') : box(30, T+16, 67, 73, 'border-radius:7px;background:#dfd7cb');
+  h += box(62, T+70, 33, 15, `background:rgba(255,255,255,.82);border-radius:8px;${F(400,11)}color:#849990;display:flex;align-items:center;justify-content:center`, pct + '%');
+  h += txt(114, T+16, 230, 20, F(700,15)+'color:#6a6a6a', esc(t.name));
+  h += txt(113, T+37, 230, 17, F(400,13)+'color:#8f8f8f', `${range(t)} · ${days(t)} days`);
+  h += txt(114, T+57, 60, 16, F(700,14)+'color:#808080', `${t.packed.length}/${t.items.length}`);
+  h += txt(169, T+57, 30, 16, F(700,15)+'color:#707070', tripOutfits(t).length || t.looks || 0);
+  h += txt(114, T+75, 60, 14, F(400,13)+'color:#a3a3a3', 'Packed');
+  h += txt(169, T+75, 40, 15, F(400,13)+'color:#acacac', 'Looks');
+  const done = t.items.length && t.packed.length === t.items.length;
+  const status = t.past ? 'Packed' : done ? 'Packed' : t.packed.length ? 'In progress' : 'Not started';
+  const packedStyle = 'background:#c3dbce;border:1px solid #f2f7f4;color:#1f4f3d';
+  const waitStyle = 'background:#f9f1df;border:1px solid #fcf7ee;color:#d4a857';
+  h += box(216, T+64, status==='Packed'?51:75, 19, `${status==='Packed'?packedStyle:waitStyle};border-radius:8.75px;${F(600,10)};display:flex;align-items:center;justify-content:center`, status);
+  h += img('ic_chev.png', 353, T+44, 7, 12);
+  if (withWeather) h += weatherRow(t, 59, T+96, false);
+  h += hit(16, T, 360, H, 'go:trip?id=' + t.id, t.name);
+  return {html:h, h:H};
+}
+// deterministic "forecast" per trip
+function forecast(t) {
+  const seed = [...(t.dest||t.name)].reduce((a,c)=>a+c.charCodeAt(0),0);
+  const out = []; const s = pd(t.start);
+  for (let i=0;i<4;i++){ const d = new Date(s); d.setDate(s.getDate()+i); const hi = 66 + ((seed*7+i*13)%24); out.push({day:['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()], date:`${d.getMonth()+1}/${d.getDate()}`, hi, lo:hi-12-((seed+i)%6), sun:((seed+i)%3)===0}); }
+  return out;
+}
+function weatherRow(t, x, y, detailed) {
+  let h = '';
+  forecast(t).forEach((f, i) => {
+    const cx = x + i * 84;
+    if (detailed) {
+      h += txt(cx-6, y, 35, 11, F(600,9)+'color:#343434', f.day, 'c') + txt(cx-6, y+10, 35, 10, F(400,8)+'color:#707070', f.date, 'c');
+      h += img(f.sun?'wx_sun.png':'wx_cloud.png', cx, y+22, 23, f.sun?22:19);
+      h += txt(cx-6, y+45, 35, 11, F(600,9)+'color:#343434', f.hi+'°', 'c') + txt(cx-6, y+56, 35, 10, F(400,8)+'color:#707070', f.lo+'°', 'c');
+    } else {
+      h += txt(cx-6, y, 35, 17, F(600,9)+'color:#707070', f.day, 'c');
+      h += img(f.sun?'wx_sun.png':'wx_cloud.png', cx, y+17, 23, f.sun?22:19);
+      h += txt(cx-6, y+39, 35, 12, F(600,9)+'color:#707070', f.hi+'°', 'c');
+    }
+  });
+  return h;
+}
+
+function onboardingCard() {
+  const rows = [['1','Plan your next trip','30 seconds: destination, dates, activities.','go:addtrip'],['2','Photograph a few favorites','5,10 pieces is enough. Start small.','go:camera'],['3','Personalize your style','Style, colors, weather comfort.','go:style'],['✦','Try with demo data','Skip setup. See a populated example.','demo']];
+  let h = `<div class="a" style="left:20px;top:168px;width:352px;border:1px solid #e5dcc9;border-radius:20px;padding:20px 18px 18px;background:linear-gradient(30.975deg,#fffcf7 12%,#f0e8db 92%);display:flex;flex-direction:column;gap:12px">
+    <p style="margin:0;${F(700,10)}color:#a8336b;letter-spacing:1.8px">WELCOME TO PACK LIGHT</p>
+    <p style="margin:0;font:400 22px/1.1 var(--times);color:#143524">The more you use it, the smarter it gets.</p>
+    <p style="margin:0;font:400 13px/1.4 Inter;color:#3d3d3d">Pack Light learns from every trip and packs better for you over time.</p>
+    <div style="display:flex;flex-direction:column;gap:6px">`;
+  rows.forEach(r => h += `<button class="chip-press" data-act="${r[3]}" style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;display:flex;gap:12px;align-items:center;padding:8px 12px 8px 10px">
+      <span style="width:24px;height:24px;border-radius:12px;background:#1a4332;color:#fff;font:400 13px var(--times);display:flex;align-items:center;justify-content:center;flex:none">${r[0]}</span>
+      <span style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="${F(600,13)}color:#1a1a1a">${r[1]}</span><span style="font:400 11px/1.35 Inter;color:#6b6b6b">${r[2]}</span></span>
+      <span style="${F(600,18)}color:#9e9e9e">›</span></button>`);
+  h += `</div><button class="chip-press" data-act="go:tour?step=1" style="background:#fff;border:1.5px solid #1a4332;border-radius:12px;padding:12px 0;display:flex;gap:8px;align-items:center;justify-content:center;${F(700,14)}color:#143524"><span style="font-weight:400;color:#d4a857">✦</span>Take a 30-second tour<span style="font-weight:600">→</span></button></div>`;
+  h += `<button class="a" data-act="dismisscard" aria-label="Dismiss" style="left:334px;top:178px;width:28px;height:28px;border-radius:14px;background:rgba(255,255,255,.7);border:1px solid #e5dcc9;${F(600,12)}color:#3d3d3d;display:flex;align-items:center;justify-content:center">✕</button>`;
+  return h;
+}
+
+/* ----- Add a new trip ----- */
+R.addtrip = ({edit}) => {
+  if (!U.draft) {
+    const t = edit ? trip(edit) : null;
+    U.draft = t ? {name:t.name, dest:t.dest, start:t.start, end:t.end, bags:[...t.bags], acts:[...t.acts]} : {name:'', dest:'', start:'', end:'', bags:[], acts:[]};
+  }
+  const d = U.draft;
+  let h = back(20, 67, 'cancelDraft');
+  h += txt(20, 105, 352, 35, F(400,32,'T')+'color:#1a1a1a', edit?'Edit trip':'Add a new trip', 'c');
+  h += txt(42, 144, 308, 23, F(500,14,'Inter',1)+'color:#a8336b', 'Let’s get started!', 'c');
+  h += box(116, 191, 160, 160, 'border-radius:50%;background:#f8f4ed') + img('luggage.png', 169, 234, 62, 73);
+  const lab = (y, t) => txt(20, y, 200, 17, F(600,14)+'color:#1a1a1a', t);
+  h += lab(375, 'Trip name') + `<input class="field" id="f-name" style="left:20px;top:400px;width:352px;height:46px" placeholder="New York Work Trip" value="${esc(d.name)}" autocomplete="off">`;
+  h += lab(458, 'Destination') + `<input class="field" id="f-dest" style="left:20px;top:483px;width:352px;height:46px" placeholder="New York, NY" value="${esc(d.dest)}" autocomplete="off">`;
+  h += txt(20, 541, 171, 17, F(600,14)+'color:#1a1a1a', 'Start date') + txt(201, 541, 171, 17, F(600,14)+'color:#1a1a1a', 'End date');
+  const dateBox = (x, key, val) => `<label class="field" style="left:${x}px;top:566px;width:171px;height:46px;display:flex;align-items:center;cursor:pointer;${val?'':'color:#9e9e9e'}">${val ? fmtDate(val) : 'Pick a date'}<input type="date" id="f-${key}" value="${val}" aria-label="${key==='start'?'Start date':'End date'}" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer"></label>`;
+  h += dateBox(20, 'start', d.start) + dateBox(201, 'end', d.end);
+  h += txt(20, 632, 352, 17, '', `<span style="${F(600,14)}color:#1a1a1a">Bags</span>&nbsp;&nbsp;<span style="${F(400,13)}color:#6b6b6b">(pick all you're bringing)</span>`);
+  const tile = (x, y, label, icon, w, hh, on, act) => {
+    let s2 = `<button class="btn chip-press" data-act="${act}" style="left:${x}px;top:${y}px;width:110.67px;height:70px;border-radius:12px;border:1.5px solid ${on?'#1a4332':'#e5e5e5'};background:${on?'#f2f7f4':'#fff'};flex-direction:column;gap:6px;padding:14px 8px;justify-content:flex-start" aria-pressed="${on}">`;
+    s2 += icon ? `<img src="${A}${icon}.png" alt="" style="width:${w}px;height:${hh}px;mix-blend-mode:multiply;flex:none">` : `<span style="font:400 22px/22px Inter;color:#000;height:22px">⋯</span>`;
+    return s2 + `<span style="${F(600,12)}color:${on?'#143524':'#3d3d3d'};white-space:nowrap">${label}</span></button>`;
+  };
+  BAGS.forEach((b, i) => { h += tile(20 + (i%3)*120.67, 661 + Math.floor(i/3)*80, b[0], b[1], b[2], b[3], d.bags.includes(b[0]), 'bag:'+b[0]); });
+  h += txt(20, 915, 352, 17, F(600,14)+'color:#1a1a1a', 'What will you be doing?');
+  h += txt(20, 936, 352, 15, F(400,12)+'color:#6b6b6b', 'This helps us create better outfit suggestions.');
+  ACTS.forEach((a, i) => { h += tile(20 + (i%3)*120.67, 963 + Math.floor(i/3)*80, a[0], a[1], a[2], a[3], d.acts.includes(a[0]), 'act:'+a[0]); });
+  h += btn(20, 1285, 352, 53, 'background:#1a4332;border:1.5px solid #4a8a70;border-radius:16px;'+F(700,17)+'color:#fff', edit?'Save changes':'Save trip', 'savetrip' + (edit?':'+edit:''));
+  h += btn(20, 1350, 352, 52, 'gap:8px;'+F(600,15)+'color:#1a4332', `<img src="${A}ic_calendar.png" alt="" style="width:24px;height:24px;">Import from Calendar`, 'importcal');
+  return scrollScreen(1502, h);
+};
+
+/* ----- Trip details ----- */
+R.trip = ({id: tid}) => {
+  const t = trip(tid); if (!t) return R.trips();
+  let h = back(20, 66, 'tab:trips');
+  h += img('ic_edit.png', 316, 63, 23, 24) + hit(308, 55, 38, 40, 'go:addtrip?edit=' + t.id, 'Edit trip');
+  h += img('ic_trash.png', 345, 64, 19, 21) + hit(340, 55, 34, 40, 'deltrip:' + t.id, 'Delete trip');
+  // hero
+  const ph = tripPhoto(t);
+  h += box(0, 105, 392, 261, 'overflow:hidden;background:#1d3b2e', ph ? `<img src="${A}${ph}.jpg" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(1.2px);transform:scale(1.06)">` : '');
+  h += box(0, 105, 392, 261, 'background:rgba(6,56,35,.69)');
+  h += txt(24, 135, 320, 14, F(600,11)+'color:#d4a857;letter-spacing:1.32px;text-transform:uppercase', esc(t.dest||''));
+  h += txt(24, 158, 344, 32, F(400,24,'T')+'color:#fff', esc(t.name));
+  h += txt(24, 202, 344, 18, F(400,12)+'color:#f5e8d0', `${range(t,'short')} · ${days(t)} days${t.acts.length?' · '+esc(t.acts.join(', ')):''}`);
+  h += txt(24, 232, 344, 18, F(400,12)+'color:#f5e8d0', esc(t.bags.join(', ') || 'No bags picked yet'));
+  [['Items', t.items.length],['Packed', t.packed.length],['Outfits', tripOutfits(t).length]].forEach((s2, i) => {
+    h += box(24 + i*96, 267, 80, 64, 'background:rgba(255,255,255,.17);border-radius:12px');
+    h += txt(48 + i*96, 281, 40, 18, F(700,16)+'color:#fffdf9', s2[1]) + txt(49 + i*96, 299, 60, 18, F(400,12)+'color:#fffdf9', s2[0]);
+  });
+  // weather card
+  h += box(5, 378, 382, 214, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:15px');
+  h += img('wx_sun.png', 14, 391, 23, 22) + txt(49, 391, 330, 22, F(400,10)+'color:#6b6b6b', 'Updated just now · Check back as your trip gets closer');
+  h += weatherRow(t, 59, 427, true);
+  const f = forecast(t); const rainy = f.filter(x => !x.sun).map(x => x.day[0]+x.day.slice(1).toLowerCase());
+  h += box(52, 517, 288, 53, 'background:rgba(223,215,203,.62);border-radius:16px');
+  h += txt(71, 517, 250, 53, F(400,10)+'color:#6b6b6b;white-space:normal', rainy.length ? `Rain possible ${rainy.slice(0,2).join(' and ')} and cooler mornings, pack a layer + small umbrella.` : 'Clear skies all week. Breathable layers and sunglasses will do.');
+  // packing list
+  const n = t.items.length;
+  const innerH = Math.max(40, 16 + n * 28.5);
+  const cardH = innerH + 54;
+  h += box(5, 602, 382, cardH, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:15px');
+  h += txt(19, 611, 150, 17, F(600,14)+'color:#343434', 'Packing List');
+  h += btn(290, 602, 97, 36, F(600,14)+'color:#1f4f3d;justify-content:flex-start;padding-left:6px', '+ Add item', 'additems:' + t.id);
+  h += box(14, 640, 364, innerH, 'background:#fffdfc;border:2px solid #f2f1ef;border-radius:10px');
+  if (!n) h += txt(14, 640, 364, innerH, F(400,13)+'color:#9e9e9e', 'Nothing yet. Add pieces from your closet.', 'c');
+  t.items.forEach((iid, i) => {
+    const it = item(iid); if (!it) return;
+    const on = t.packed.includes(iid);
+    h += img(on ? 'cb_on.png' : 'cb_off.png', 24, 649 + i*28.5, 16, 19);
+    h += txt(50, 650 + i*28.5, 300, 17, F(600,14)+`color:#343434;${on?'text-decoration:line-through;text-decoration-color:#9e9e9e':''}`, esc(it.name));
+    h += hit(16, 646 + i*28.5, 360, 26, `packtoggle:${t.id}:${iid}`, (on?'Unpack ':'Pack ') + it.name);
+  });
+  let y = 602 + cardH + 16;
+  if (t.past) {
+    h += btn(16, y, 360, 48, 'background:#0f4b32;border:1px solid #78988b;border-radius:12px;'+F(600,14)+'color:#fefefe', t.recap&&t.recap.done?'Review again':'Review this trip', 'go:recap?id='+t.id); y += 64;
+  } else {
+    h += btn(16, y, 360, 48, 'background:#fff;border:1px solid #e5e5e5;border-radius:12px;'+F(600,14)+'color:#1f4f3d', 'Open packing checklist →', 'packfor:'+t.id); y += 60;
+    h += btn(16, y, 360, 40, F(600,13)+'color:#6b6b6b', 'Back from this trip? Mark it done', 'finishtrip:'+t.id); y += 52;
+  }
+  return scrollScreen(Math.max(930, y + 40), h);
+};
+
+/* ----- Closet ----- */
+function filteredItems() {
+  const f = U.filters;
+  let list = S.items.slice();
+  if (U.cat !== 'All') list = list.filter(i => i.cat === U.cat);
+  if (f.cats.length) list = list.filter(i => f.cats.includes(i.cat === 'Accessories' ? 'Acc.' : i.cat));
+  if (f.colors.length) list = list.filter(i => f.colors.includes(i.colorHex));
+  if (f.seasons.length) list = list.filter(i => f.seasons.some(s => i.seasons.includes(s)));
+  if (f.uses.length) list = list.filter(i => f.uses.some(u => (i.uses||[]).includes(u)));
+  return list;
+}
+function closetHeader(seg) {
+  let h = txt(20, 78, 120, 31, F(400,36,'T')+'color:#343434', 'Closet');
+  h += txt(20, 132, 183, 17, F(500,14,'Inter',1)+'color:#a8336b', 'Build your wardrobe');
+  h += img('ic_add.png', 181, 81, 18, 26) + txt(201, 83, 28, 22, F(600,14)+'color:#343434', 'Add') + hit(176, 78, 58, 32, 'sheet:add', 'Add item');
+  h += img('ic_filter.png', 241, 81, 24, 26) + txt(269, 83, 35, 22, F(600,14)+'color:#343434', 'Filter') + hit(238, 78, 70, 32, 'sheet:filter', 'Filter');
+  h += img('ic_select.png', 310, 84, 16, 19) + txt(328, 81, 46, 26, F(600,14)+'color:#343434', U.select?'Cancel':'Select') + hit(306, 78, 70, 32, 'select', 'Select');
+  // segmented control
+  const favCount = S.items.filter(i => i.fav).length;
+  const pills = {All:[48,94], Outfits:[155,80], Favorites:[250,94]};
+  h += box(46, 171, 300, 32, 'background:#f0e8db;border-radius:16px');
+  h += box(pills[seg][0], 173, pills[seg][1], 28, 'background:#fff;border-radius:16px;transition:left .2s');
+  h += txt(81, 177, 17, 22, F(600,12)+'color:#343434', 'All') + txt(99, 178, 20, 22, F(500,9)+'color:#6b6b6b', S.items.length);
+  h += txt(173, 178, 40, 20, F(600,12)+'color:#343434', 'Outfits') + txt(217, 178, 20, 22, F(500,9)+'color:#6b6b6b', S.outfits.length);
+  h += txt(257, 178, 54, 20, F(600,12)+'color:#343434', 'Favorites') + txt(314, 178, 20, 22, F(500,9)+'color:#6b6b6b', favCount);
+  h += hit(46, 171, 100, 32, 'seg:All', 'All') + hit(146, 171, 100, 32, 'seg:Outfits', 'Outfits') + hit(246, 171, 100, 32, 'seg:Favorites', 'Favorites');
+  return h;
+}
+function catTabs(y=207) {
+  const xs = [39,73,119,185,239,317], ws = [16,28,48,36,60,69];
+  const cur = Math.max(0, CATS.indexOf(U.cat)), from = U.catFrom ?? cur;
+  let h = `<div class="a cat-scroll" id="cattabs" style="left:17px;top:${y}px;width:335px;height:50px"><div style="position:relative;width:371px;height:50px">`;
+  h += `<div style="position:absolute;left:22px;top:33px;width:347px;height:2px;background:#c7c7c7"></div>`;
+  CATS.forEach((c, i) => {
+    const on = U.cat === c;
+    h += `<button data-act="cat:${c}" aria-pressed="${on}" style="position:absolute;left:${xs[i]-27}px;top:5px;height:31px;padding:0 10px;line-height:15px;${F(on?700:400,12)}color:#343434;white-space:nowrap">${c}</button>`;
+  });
+  h += `<div id="catline" data-l="${xs[cur]-17}" data-w="${ws[cur]}" style="position:absolute;left:${xs[from]-17}px;top:33px;width:${ws[from]}px;height:2px;background:#1a1a1a;transition:left .28s cubic-bezier(.3,.7,.2,1),width .28s cubic-bezier(.3,.7,.2,1)"></div>`;
+  h += `</div></div><div class="a" id="catfade" style="left:316px;top:${y}px;width:36px;height:50px;background:linear-gradient(90deg,rgba(255,253,249,0),#fffdf9);pointer-events:none;transition:opacity .2s"></div>`;
+  return h;
+}
+function itemCard(it, x, y, opts={}) {
+  const p = PHOTOS[it.photo] || {ox:24,oy:22,w:121,h:123};
+  let h = box(x, y, 168, 168, 'background:#fffdfc;border:1px solid #f2f1ef;border-radius:10px;overflow:hidden');
+  if (it.custom) h += box(x+14, y+14, 140, 140, '', `<img src="${it.custom}" alt="" style="width:100%;height:100%;object-fit:contain">`);
+  else h += img(photoSrc(it), x + p.ox, y + p.oy, p.w, p.h);
+  if (U.select && !opts.noSelect) {
+    const on = U.selected.includes(it.id);
+    h += `<div class="a" style="left:${x+8}px;top:${y+9}px;width:16px;height:16px;border-radius:50%;border:1px solid #0f4b32;background:#fffdfc;display:flex;align-items:center;justify-content:center">${on?'<svg width="9" height="7" viewBox="0 0 9 7" aria-hidden="true"><path d="M1 3.5l2.2 2.2L8 1" stroke="#0f4b32" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>`;
+    h += hit(x, y, 168, 168, 'pick:' + it.id, it.name);
+  } else {
+    h += hit(x, y, 130, 168, 'item:' + it.id, it.name);
+  }
+  h += img(it.fav ? 'heart_on.png' : 'heart_off.png', x + 135, y + 6, 23, 22) + hit(x + 126, y, 42, 38, 'fav:' + it.id, it.fav ? 'Unfavorite' : 'Favorite');
+  return h;
+}
+function outfitTile(o, x, y) {
+  let h = '';
+  const cells = [[0,0],[76,0],[0,82],[76,82]];
+  o.items.slice(0,4).forEach((iid, k) => {
+    const it = item(iid); const [dx, dy] = cells[k];
+    h += box(x+dx, y+dy, 73, 79, 'background:rgba(223,215,203,.62);border-radius:7px;overflow:hidden');
+    if (it) h += it.custom ? box(x+dx+4, y+dy+4, 65, 71, '', `<img src="${it.custom}" alt="" style="width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply">`) : fitImg(it, x+dx+2, y+dy+3, 69, 73);
+  });
+  h += box(x+21, y+141, 109, 16, `background:rgba(255,253,252,.9);border-radius:16px;${F(600,10)}color:#343434;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden`, esc(o.name));
+  h += img(o.fav ? 'heart_on.png' : 'heart_off.png', x + 121, y + 5, 23, 22) + hit(x + 112, y - 4, 44, 38, 'ofav:' + o.id, 'Favorite outfit');
+  return h;
+}
+function fitImg(it, x, y, w, h, style='mix-blend-mode:multiply') {
+  const p = PHOTOS[it.photo]; if (!p) return '';
+  const s = Math.min(w / p.w, h / p.h);
+  const W = p.w * s, H = p.h * s;
+  return img(photoSrc(it), x + (w - W) / 2, y + (h - H) / 2, W, H, style);
+}
+R.closet = () => {
+  const seg = U.closetSeg;
+  let h = closetHeader(seg);
+  let H = 852;
+  if (!S.items.length && seg === 'All') {
+    h += catTabs();
+    h += box(136, 277, 120, 120, 'border-radius:50%;background:#f5e8d0') + img('em_shirt.png', 164.0, 302.5, 64, 69);
+    h += txt(32, 433, 328, 32, F(400,28,'T')+'color:#1a1a1a', 'Your closet is empty', 'c');
+    h += txt(40, 473, 312, 34, F(400,13)+'color:#6b6b6b;white-space:normal;line-height:normal', 'Photograph your favorite pieces, one at a time.<br>5 to 10 is plenty to start.', 'c');
+    h += btn(56, 541, 280, 50, 'background:#1f4f3d;border:1px solid #78988b;border-radius:25px;'+F(600,14)+'color:#fff', 'Take your first photo', 'go:camera');
+    h += btn(56, 603, 280, 46, 'background:#fffdf9;border:1px solid #e5e5e5;border-radius:23px;'+F(600,13)+'color:#1f4f3d', '✦ Or try with demo data', 'demo');
+  } else if (seg === 'All') {
+    h += catTabs();
+    const f = U.filters; const chips = [...f.cats, ...f.colors.map(c => COLOR_NAMES[c]), ...f.seasons, ...f.uses];
+    let y0 = 266;
+    if (chips.length) {
+      let cx = 20;
+      chips.slice(0,3).forEach(c => { const w = 26 + c.length * 7; h += btn(cx, 257, w, 24, `border:1px solid #1f4f3d;background:#f2f7f4;border-radius:12px;${F(600,11)}color:#343434;gap:5px`, `${esc(c)} <span style="width:12px;height:12px;border-radius:6px;background:#1f4f3d;color:#fff;font-size:8px;display:inline-flex;align-items:center;justify-content:center">✕</span>`, 'unfilter:' + c); cx += w + 6; });
+      h += btn(300, 257, 72, 24, F(600,11)+'color:#1f4f3d', 'Clear Filters', 'clearfilters');
+      y0 = 292;
+    }
+    const list = filteredItems();
+    if (!list.length) h += txt(20, y0 + 40, 352, 20, F(400,13)+'color:#8f8f8f', 'Nothing matches those filters.', 'c');
+    list.forEach((it, i) => { h += itemCard(it, i % 2 ? 203 : 20, y0 + Math.floor(i / 2) * 184); });
+    H = Math.max(852, y0 + Math.ceil(list.length / 2) * 184 + 150);
+  } else if (seg === 'Outfits') {
+    h += btn(46, 225, 300, 32, 'background:#0f4b32;border-radius:16px;'+F(600,12)+'color:#fff', '✦ Generate for trip', 'generate');
+    h += btn(46, 263, 300, 32, 'background:#fff;border:1px solid #f2f1ef;border-radius:16px;'+F(600,12)+'color:#343434', '+ Create', 'createoutfit');
+    h += btn(46, 301, 300, 32, 'background:#fff;border:1px solid #f2f1ef;border-radius:16px;'+F(600,12)+'color:#343434;gap:6px', `<img src="${A}ic_filter.png" alt="" style="width:14px;height:15px">${U.outfitTrip?esc(trip(U.outfitTrip)?.name||'Filter by trip'):'Filter by trip'}`, 'sheet:tripfilter');
+    const list = U.outfitTrip && trip(U.outfitTrip) ? tripOutfits(trip(U.outfitTrip)) : S.outfits;
+    if (!list.length) h += txt(20, 400, 352, 40, F(400,13)+'color:#8f8f8f;white-space:normal', S.items.length ? 'No outfits yet. Generate a set for your next trip, or create one.' : 'Add a few pieces to your closet first.', 'c');
+    list.forEach((o, i) => { h += outfitTile(o, i % 2 ? 203 : 39, 358 + Math.floor(i / 2) * 176); });
+    H = Math.max(852, 358 + Math.ceil(list.length / 2) * 176 + 150);
+  } else {
+    const fo = S.outfits.filter(o => o.fav), fi = S.items.filter(i => i.fav);
+    h += txt(20, 252, 150, 26, F(400,20,'T')+'color:#343434', 'Outfits') + txt(232, 256, 140, 18, F(400,10)+'color:#8f8f8f', `${fo.length} favorited`, 'r');
+    h += box(20, 280, 352, 1, 'background:#e5e5e5');
+    let y = 292;
+    if (!fo.length) { h += txt(20, y, 352, 30, F(400,12)+'color:#8f8f8f', 'Tap the heart on an outfit to save it here.'); y += 40; }
+    fo.forEach((o, i) => { h += outfitTile(o, i % 2 ? 203 : 39, y + Math.floor(i / 2) * 176); });
+    if (fo.length) y += Math.ceil(fo.length / 2) * 176;
+    h += txt(20, y + 8, 150, 26, F(400,20,'T')+'color:#343434', 'Items') + txt(232, y + 12, 140, 18, F(400,10)+'color:#8f8f8f', `${fi.length} favorited`, 'r');
+    h += box(20, y + 36, 352, 1, 'background:#e5e5e5');
+    y += 50;
+    if (!fi.length) h += txt(20, y, 352, 30, F(400,12)+'color:#8f8f8f', 'Tap the heart on any piece to save it here.');
+    fi.forEach((it, i) => { h += itemCard(it, i % 2 ? 203 : 20, y + Math.floor(i / 2) * 183, {noSelect:true}); });
+    H = Math.max(852, y + Math.ceil(fi.length / 2) * 183 + 150);
+  }
+  let after = '';
+  if (U.select) after = selectBar();
+  return scrollScreen(H, h, {nav: U.select ? null : 'closet', after});
+};
+function selectBar() {
+  const n = U.selected.length;
+  return `<div class="a" style="left:0;bottom:0;width:392px;height:182px;z-index:40">
+    <div class="a" style="left:0;top:0;width:392px;height:182px;background:#fefefe;border:1px solid rgba(0,0,0,.12);border-bottom:0;border-radius:38px 38px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,.06)"><div class="grab"></div></div>
+    ${btn(22, 23, 60, 32, F(600,14)+'color:#0f4b32', 'Done', 'select')}
+    ${txt(96, 29, 200, 22, F(600,14)+'color:#343434', `${n} Selected`, 'c')}
+    ${btn(26, 68, 170, 48, `background:#0f4b32;border:1px solid #78988b;border-radius:16px;${F(600,12)}color:#fefefe;${n?'':'opacity:.5'}`, 'Add to Trip', 'sheet:addtotrip')}
+    ${btn(202, 68, 170, 48, `background:#fffdfc;border:1px solid #cd1919;border-radius:16px;${F(600,12)}color:#cd1919;${n?'':'opacity:.5'}`, 'Delete', 'sheet:confirmdelete')}</div>`;
+}
+
+/* ----- Item detail / review (shared) ----- */
+R.review = ({id: iid}) => {
+  const editing = !!iid;
+  const d = U.draftItem;
+  let h = back(20, 60, editing ? 'tab:closet' : 'retake');
+  h += txt(20, 100, 352, 31, F(400,32,'T')+'color:#343434', editing ? 'Edit Item' : 'Review Item', 'c');
+  h += txt(92, 138, 209, 42, F(500,14,'Inter',1)+'color:#a8336b;white-space:normal;line-height:20.8px', 'Or make quick edits before adding to your closet', 'c');
+  h += box(22, 186, 347, 264, 'background:#fffdfc;border:1px solid #d9d9d9;border-radius:10px');
+  const p = PHOTOS[d.photo];
+  if (d.custom) h += box(85, 200, 222, 212, '', `<img src="${d.custom}" alt="" style="width:100%;height:100%;object-fit:contain">`);
+  else if (d.photo === 'white_shirt') h += img('it_white_shirt.png', 85, 207, 212, 215 - 0, 'object-fit:contain;height:208px');
+  else h += fitImg(d, 90, 200, 212, 210, '');
+  if (!editing) h += img('ic_retake.png', 162, 423, 16, 16) + txt(183, 422, 60, 17, F(600,14)+'color:#0f4b32', 'Retake') + hit(150, 414, 100, 34, 'retake', 'Retake');
+  [['Spring',40,71],['Summer',123,84],['Fall',219,48],['Winter',279,73]].forEach(([s, x, w]) => {
+    const on = d.seasons.includes(s);
+    h += btn(x, 461, w, 38, `border-radius:16px;border:1px solid ${on?'#1a4332':'#d9d9d9'};background:${on?'#f2f7f4':'#fffdfc'};${F(600,14)}color:#343434`, s, 'dseason:' + s);
+  });
+  h += box(22, 510, 347, 219, 'background:#fffdfc;border:2px solid #f2f1ef;border-radius:10px');
+  const rows = [['Category', d.cat, 'dcat'], ['Type', d.type, 'dtype'], ['Color', '', 'dcolor'], ['Material', d.material, 'dmat'], ['Best for', (d.uses||[]).slice(0,3).join(', ') || 'Everyday', 'duse']];
+  rows.forEach(([l, v, act], i) => {
+    const y = 527 + i * 42;
+    h += txt(45, y, 127, 17, F(600,14)+'color:#343434', l);
+    if (l === 'Color') h += `<div class="a" style="left:314px;top:${y-1}px;width:18px;height:18px;border-radius:50%;border:1px solid #5f5f60;background:${d.colorHex}"></div>`;
+    else h += txt(150, y + 1, 186, 17, F(500,12)+'color:#343434', esc(v), 'r');
+    h += img('ic_chev_r.png', 345, y - 2, 17, 20) + hit(30, y - 12, 332, 40, act, 'Change ' + l);
+  });
+  h += btn(33, 755, 326, 48, 'background:#0f4b32;border:1px solid #78988b;border-radius:7px;'+F(600,12)+'color:#fff', editing ? 'Save changes' : 'Add to Closet', editing ? 'saveitem:' + iid : 'addtocloset');
+  if (editing) h += btn(33, 812, 326, 36, F(600,13)+'color:#cd1919', 'Remove from closet', 'removeitem:' + iid);
+  return scrollScreen(editing ? 880 : 852, h);
+};
+
+/* ----- Camera flow ----- */
+R.camera = ({phase='aim'}) => {
+  if (phase === 'proc') {
+    // Processing 1 -> 2 -> 3: shutter flash, background washes out and disappears while the ring fills
+    const C = 2 * Math.PI * 93;
+    let h = `<img class="fullimg" src="${A}scr_proc3.jpg" alt="Processing — removing the background">`;
+    h += `<div class="a" style="left:0;top:174px;width:392px;height:496px;overflow:hidden">`
+      + `<img src="${A}proc_photo.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%">`
+      + `<img src="${A}proc_wash.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;animation:pl-wash 2.9s ease-in-out forwards">`
+      + `<img src="${A}proc_cut.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;animation:pl-cut 2.9s ease-in-out forwards">`
+      + `<svg style="position:absolute;left:101px;top:158px;width:192px;height:192px;transform:rotate(-90deg)" viewBox="0 0 192 192" aria-hidden="true">`
+      +   `<defs><linearGradient id="plg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#e3a9cf"/><stop offset="1" stop-color="#c535a4"/></linearGradient></defs>`
+      +   `<circle cx="96" cy="96" r="93" fill="none" stroke="rgba(221,160,200,.75)" stroke-width="3.6" style="animation:pl-track 2.9s ease-in-out forwards"/>`
+      +   `<circle cx="96" cy="96" r="93" fill="none" stroke="#c535a4" stroke-width="3.6" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" style="--c:${C}px;animation:pl-ring 2.9s ease-in-out forwards"/>`
+      + `</svg>`
+      + `<div style="position:absolute;inset:0;background:#fff;opacity:0;animation:pl-flash .45s ease-out"></div>`
+      + `</div>`;
+    h += `<style>
+      @keyframes pl-flash{0%{opacity:.9}100%{opacity:0}}
+      @keyframes pl-wash{0%,30%{opacity:0}52%,100%{opacity:1}}
+      @keyframes pl-cut{0%,66%{opacity:0}90%,100%{opacity:1}}
+      @keyframes pl-track{0%,75%{opacity:1}95%,100%{opacity:0}}
+      @keyframes pl-ring{0%{stroke-dashoffset:var(--c)}22%{stroke-dashoffset:calc(var(--c)*.8)}52%{stroke-dashoffset:calc(var(--c)*.36)}92%,100%{stroke-dashoffset:0}}
+      @media (prefers-reduced-motion:reduce){[style*="pl-"]{animation-duration:.01s!important}}
+    </style>`;
+    return h;
+  }
+  const src = phase === 'aim' ? 'scr_cam.jpg' : 'scr_success.jpg';
+  let h = `<img class="fullimg" src="${A}${src}" alt="${phase==='aim'?'Take a photo — center your object in the camera':'Success'}">`;
+  if (phase === 'aim') {
+    h += hit(20, 76, 44, 44, 'tab:closet', 'Close camera');
+    h += hit(160, 712, 74, 64, 'shutter', 'Take photo');
+    h += `<button class="btn" data-act="upload" style="left:268px;top:724px;width:100px;height:40px;border-radius:20px;background:rgba(255,255,255,.14);color:#fff;${F(600,12)}">Upload</button>`;
+  }
+  return h;
+};
+
+/* ----- Packing tab ----- */
+R.packing = () => {
+  const up = upcoming();
+  const t = trip(U.packTrip) && !trip(U.packTrip).past ? trip(U.packTrip) : up[0];
+  let h = txt(20, 78, 150, 31, F(400,36,'T')+'color:#343434', 'Packing');
+  if (!t) {
+    h += txt(20, 132, 330, 17, F(500,14,'Inter',1)+'color:#a8336b', 'Pack lighter, improve habits');
+    h += box(136, 283, 120, 120, 'border-radius:50%;background:#f5e8d0') + img('em_lug.png', 171.5, 314.0, 49, 58);
+    h += txt(32, 460, 328, 32, F(400,28,'T')+'color:#1a1a1a', 'No upcoming trips', 'c');
+    h += txt(56, 498, 280, 34, F(400,12)+'color:#6b6b6b;white-space:normal', 'Add a trip first, your smart packing assistant will appear here.', 'c');
+    h += btn(56, 590, 280, 50, 'background:#1f4f3d;border:1px solid #78988b;border-radius:25px;'+F(600,14)+'color:#fff', 'Go to Trips', 'tab:trips');
+    return scrollScreen(852, h, {nav:'packing'});
+  }
+  U.packTrip = t.id;
+  h += btn(335, 74, 40, 40, 'border-radius:20px', `<img src="${A}ic_swap.png" alt="" style="width:40px;height:40px;border-radius:20px">`, up.length > 1 ? 'sheet:packtrip' : 'toast:Only one upcoming trip', 'Switch trip');
+  h += txt(20, 132, 340, 17, F(500,14,'Inter',1)+'color:#a8336b', `${esc(t.name)} · ${range(t)}`);
+  // carry-on fit card (+ trip header)
+  h += box(5, 168, 382, 205, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:15px');
+  const ph = tripPhoto(t);
+  h += ph ? img(ph + '.jpg', 33, 188, 67, 73, 'border-radius:7px;object-fit:cover') : box(33, 188, 67, 73, 'background:#dfd7cb;border-radius:7px');
+  h += txt(115, 195, 260, 28, F(400,22,'T')+'color:#1a1a1a', esc(city(t) || t.name));
+  h += txt(115, 223, 260, 18, F(400,12)+'color:#6b6b6b', range(t, 'md'));
+  h += txt(115, 239, 260, 17, F(400,11)+'color:#6b6b6b', `${days(t)} days${t.acts.length?' · '+esc(t.acts.map(a=>a.replace(' Day','')).join(', ')):''}`);
+  h += box(41, 281, 324, 1, 'background:#e5e5e5');
+  const clothes = t.items.map(item).filter(Boolean);
+  const lbs = clothes.reduce((a, i) => a + (WEIGHT[i.cat] || .4), 0) + 0.2 * Object.values(t.essentials||{}).length;
+  const cap = 14;
+  const used = Math.min(1, lbs / cap);
+  h += txt(31, 296, 231, 22, F(400,18,'T')+'color:#343434', t.bags.includes('Carry-on') || !t.bags.length ? 'Carry-on fit' : 'Bag fit');
+  h += box(26, 327, 339, 11, 'background:#e5e5e5;border-radius:10px') + box(26, 327, Math.max(11, 339 * used), 11, `background:${used>.9?'#b83c3c':'#0f4b32'};border-radius:10px;transition:width .3s`);
+  h += txt(26, 343, 200, 22, F(400,14,'T')+'color:#343434', `${clothes.length} items · ${lbs.toFixed(1)} lbs`);
+  h += txt(240, 343, 125, 22, F(400,14,'T')+'color:#343434', `${Math.round((1-used)*100)}% headroom`, 'r');
+  // consider adding
+  const sugg = S.items.filter(i => !t.items.includes(i.id) && ['Tops','Outerwear'].includes(i.cat) && (i.wears||0) >= 3 && (i.uses||[]).some(u => ['Casual','Travel',...t.acts].includes(u))).sort((a,b) => (b.wears||0) - (a.wears||0)).slice(0, 2);
+  let y = 388;
+  if (sugg.length) {
+    const ch = 70 + sugg.length * 90;
+    h += box(5, y, 382, ch, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:15px');
+    h += txt(31, y + 15, 231, 22, F(400,18,'T')+'color:#343434', 'Consider adding');
+    sugg.forEach((it, k) => {
+      const ty = y + 59 + k * 90;
+      h += box(26, ty, 73, 79, 'background:rgba(223,215,203,.62);border-radius:7px') + (it.custom ? box(31,ty+5,63,69,'',`<img src="${it.custom}" alt="" style="width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply">`) : fitImg(it, 31, ty + 5, 63, 69));
+      h += txt(110, ty, 200, 22, F(700,12)+'color:#343434', esc(it.name));
+      h += txt(110, ty + 22, 193, 40, F(500,12)+'color:#343434;white-space:normal', `Wardrobe staple (${it.wears} past wears) that fits this trip’s activities${k?' and weather':''}.`);
+      h += btn(322, ty + 2, 50, 26, 'border:1px solid #0f4b32;border-radius:7px;'+F(700,12)+'color:#0f4b32', 'Add', `sugadd:${t.id}:${it.id}`);
+      if (k < sugg.length - 1) h += box(41, ty + 85, 324, 1, 'background:#e5e5e5');
+    });
+    y += ch + 15;
+  }
+  // behavior nudges
+  const looks = tripOutfits(t).length;
+  const nudge = looks < 2 ? `Only ${looks} look${looks===1?'':'s'} planned. Generate more in the Looks tab to feel ready.` : used > .85 ? 'Your bag is almost full. Leave one pair of shoes behind.' : `${looks} looks planned from ${clothes.length} pieces. That's a light, flexible bag.`;
+  h += box(5, y, 382, 101, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:15px');
+  h += txt(31, y + 15, 231, 22, F(400,18,'T')+'color:#343434', 'Behavior nudges');
+  h += txt(26, y + 45, 341, 40, F(500,12)+'color:#343434;white-space:normal', nudge);
+  if (looks < 2) h += hit(5, y, 382, 101, 'looksfor:' + t.id, 'Generate looks');
+  y += 117;
+  // outfit versatility
+  if (clothes.length) {
+    const counts = clothes.map(it => ({it, n: tripOutfits(t).filter(o => o.items.includes(it.id)).length})).sort((a,b) => b.n - a.n);
+    const reusable = counts.filter(c => c.n >= 1).length;
+    const maxN = Math.max(1, ...counts.map(c => c.n));
+    const vh = 48 + counts.length * 89;
+    h += box(5, y, 382, vh, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:15px');
+    h += txt(31, y + 15, 231, 22, F(400,18,'T')+'color:#343434', 'Outfit Versatility') + txt(290, y + 16, 75, 22, F(400,14,'T')+'color:#343434', `${reusable} reusable`, 'r');
+    counts.forEach(({it, n}, k) => {
+      const ty = y + 48 + k * 89;
+      h += box(26, ty, 73, 79, 'background:rgba(223,215,203,.62);border-radius:7px') + (it.custom ? '' : fitImg(it, 31, ty + 5, 63, 69));
+      h += txt(110, ty + 18, 110, 40, F(600,14)+'color:#343434;white-space:normal', esc(it.name));
+      h += box(226, ty + 34, 85, 11, 'background:#e5e5e5;border-radius:10px') + box(226, ty + 34, 85 * n / maxN, 11, 'background:#0f4b32;border-radius:10px');
+      h += txt(322, ty + 28, 60, 22, F(500,14)+'color:#8f8f8f', `${n} looks`);
+      if (k < counts.length - 1) h += box(41, ty + 84, 337, 1, 'background:#e5e5e5');
+    });
+    y += vh + 16;
+  }
+  // checklists
+  const ess = (() => { const e = S.prefs.essentials; const tot = Object.values(e).flat().length; return tot ? e : DEFAULT_ESSENTIALS; })();
+  const n = days(t);
+  const groups = [['Clothing', clothes.map(it => ({key:it.id, label:it.name}))],
+    ['Essentials', ess.Toiletries.map(l => ({key:'e:'+l, label:l}))],
+    ['Tech', ess.Tech.map(l => ({key:'e:'+l, label:l}))],
+    ['Basics', ess.Basics.map(l => ({key:'e:'+l, label:/sock|underwear/i.test(l) ? `${l} x ${n}` : l}))]];
+  groups.forEach(([title, rows]) => {
+    if (!rows.length) return;
+    const inner = 16 + rows.length * 28.5, ch = inner + 54;
+    const done = rows.filter(r => r.key.startsWith('e:') ? t.essentials[r.key] : t.packed.includes(r.key)).length;
+    h += box(5, y, 382, ch, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:15px');
+    h += txt(19, y + 10, 150, 17, F(600,14)+'color:#343434', title) + txt(320, y + 9, 50, 22, F(400,14,'T')+'color:#343434', `${done}/${rows.length}`, 'r');
+    h += box(14, y + 38, 364, inner, 'background:#fffdfc;border:2px solid #f2f1ef;border-radius:10px');
+    rows.forEach((r, k) => {
+      const on = r.key.startsWith('e:') ? !!t.essentials[r.key] : t.packed.includes(r.key);
+      h += img(on ? 'cb_on.png' : 'cb_off.png', 24, y + 47 + k * 28.5, 16, 19);
+      h += txt(50, y + 48 + k * 28.5, 300, 17, F(600,14)+`color:#343434;${on?'text-decoration:line-through;text-decoration-color:#9e9e9e':''}`, esc(r.label));
+      h += hit(16, y + 44 + k * 28.5, 360, 26, `packtoggle:${t.id}:${r.key}`, r.label);
+    });
+    y += ch + 16;
+  });
+  const allDone = groups.every(([, rows]) => rows.every(r => r.key.startsWith('e:') ? t.essentials[r.key] : t.packed.includes(r.key)));
+  if (allDone) { h += txt(20, y, 352, 22, F(400,18,'T',1)+'color:#1f4f3d', 'All packed. Travel light.', 'c'); y += 34; }
+  return scrollScreen(Math.max(852, y + 140), h, {nav:'packing'});
+};
+
+/* ----- Trip recap ----- */
+R.recap = ({id: tid}) => {
+  const t = trip(tid); if (!t) return R.trips();
+  if (!t.recap || !t.recap.draft) t.recap = {...(t.recap||{}), draft: Object.fromEntries(tripOutfits(t).map(o => [o.id, {wore:null, loved:null, note:''}]))};
+  const dr = t.recap.draft;
+  let h = back(33, 105, 'tab:trips');
+  h += txt(0, 107, 392, 20, F(700,15)+'color:#343434', 'Trip Recap', 'c');
+  h += btn(330, 100, 50, 32, F(600,12)+'color:#0f4b32', 'Skip', 'tab:trips');
+  h += txt(44, 158, 300, 56, F(700,24,'T')+'color:#343434;white-space:normal;line-height:28px', `How was ${esc(t.name)}?`, 'wrap');
+  h += txt(44, 214, 260, 54, F(500,14,'Inter',1)+'color:#a8336b;white-space:normal;line-height:27px', 'Tap to confirm what you wore. This sharpens future suggestions.', 'wrap');
+  let y = 306;
+  const outs = tripOutfits(t);
+  if (!outs.length) { h += txt(20, y, 352, 40, F(400,13)+'color:#8f8f8f;white-space:normal', 'No outfits were planned for this trip, so there is nothing to confirm.', 'c'); y += 60; }
+  outs.forEach(o => {
+    const st = dr[o.id] || (dr[o.id] = {wore:null, loved:null, note:''});
+    const open = st.wore === true;
+    const H = open ? 271 : 157;
+    h += box(16, y, 360, H, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:height .2s');
+    h += box(35, y + 13, 64, 80, 'background:#fefefe;border-radius:7px');
+    const cells = [[37, 15, '7px 0 0 0'], [68, 15, '0 7px 0 0'], [37, 54, '0 0 0 7px'], [68, 54, '0 0 7px 0']];
+    const shown = st.items || o.items;
+    shown.slice(0, 4).forEach((iid, k) => { const it = item(iid); const [cx, cy, r] = cells[k]; h += box(cx, y + cy, 29, 37, `background:rgba(223,215,203,.62);border-radius:${r}`); if (it && !it.custom) h += fitImg(it, cx, y + cy + 1, 29, 35); });
+    h += txt(114, y + 30, 240, 20, F(700,15)+'color:#6a6a6a', esc(o.name));
+    h += txt(113, y + 51, 240, 17, F(400,13)+'color:#8f8f8f', `${shown.length} Items${st.items ? ' · <span style="color:#1f4f3d;font-weight:600">Edited</span>' : ''}`);
+    const wOn = st.wore === true, sOn = st.wore === false;
+    h += btn(37, y + 102, 128, 42, `background:${wOn?'#f2f7f4':'#fefefe'};border:1px solid ${wOn?'#1f4f3d':'#e9e9e9'};border-radius:12px;gap:9px;${F(600,15)}color:#6a6a6a`, `<svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M1.5 7.2l5 5L16.5 1.8" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Wore it`, `wore:${t.id}:${o.id}`);
+    h += btn(172, y + 102, 48, 42, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:12px', `<img src="${A}ic_pencil.png" alt="" style="width:23px;height:24px;mix-blend-mode:multiply">`, `note:${o.id}`, 'Add a note');
+    h += btn(226, y + 102, 130, 42, `background:${sOn?'#fbf0f0':'#fefefe'};border:1px solid ${sOn?'#b83c3c':'#e9e9e9'};border-radius:12px;gap:8px;${F(500,15)}color:#6a6a6a`, `<svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true"><path d="M1.5 1.5l12 12M13.5 1.5l-12 12" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/></svg>Skipped`, `skipped:${t.id}:${o.id}`);
+    if (open) {
+      h += box(22, y + 153, 351, 1, 'background:#e9e9e9');
+      h += txt(26, y + 165, 90, 20, F(500,14)+'color:#6a6a6a', 'LOVED IT?');
+      const lOn = st.loved === true, nOn = st.loved === false;
+      h += btn(114, y + 159, 86, 31, `background:${lOn?'#f2f7f4':'#fefefe'};border:1px solid ${lOn?'#1f4f3d':'#e9e9e9'};border-radius:16px;gap:5px;${F(500,14)}color:#6a6a6a`, `<img src="${A}ic_heart_sm.png" alt="" style="width:16px;height:15px;mix-blend-mode:multiply">Loved`, `loved:${t.id}:${o.id}:1`);
+      h += btn(207, y + 159, 107, 31, `background:${nOn?'#fbf0f0':'#fefefe'};border:1px solid ${nOn?'#b83c3c':'#e9e9e9'};border-radius:16px;gap:5px;${F(500,14)}color:#6a6a6a`, `<img src="${A}ic_warn.png" alt="" style="width:18px;height:16px;mix-blend-mode:multiply">Not Quite`, `loved:${t.id}:${o.id}:0`);
+      h += `<textarea class="note" data-note="${t.id}:${o.id}" id="note-${o.id}" style="left:33px;top:${y+201}px;width:327px;height:53px" placeholder="Note (e.g. ‘ shoes hurt after walking all day’)">${esc(st.note)}</textarea>`;
+    }
+    y += H + 16;
+  });
+  const ready = outs.length && outs.every(o => dr[o.id] && dr[o.id].wore !== null);
+  h += btn(33, y + 8, 326, 44, `background:#0f4b32;border:1px solid #78988b;border-radius:7px;${F(600,13)}color:#fff;${ready?'':'opacity:.45'}`, 'Save Recap', 'saverecap:' + t.id);
+  if (!ready && outs.length) h += txt(20, y + 58, 352, 18, F(400,11)+'color:#8f8f8f', 'Mark each look as worn or skipped to save.', 'c');
+  return scrollScreen(Math.max(852, y + 110), h);
+};
+R.thanks = ({id: tid}) => {
+  const t = trip(tid);
+  const n = t && t.recap ? t.recap.confirmed || 0 : 0;
+  let h = box(22, 73, 347, 750, 'background:#fff;border:1px solid #d9d9d9;border-radius:10px');
+  h += img('illo_check.png', 30, 100, 332, 265);
+  h += txt(61, 397, 270, 62, F(600,24)+'color:#343434;white-space:normal;line-height:31px', 'Thanks for reviewing your trip!', 'c');
+  h += box(73, 468, 254, 70, 'border:1px solid #d9d9d9;border-radius:8px');
+  h += txt(73, 475, 254, 31, F(600,24)+'color:#343434', n, 'c') + txt(73, 505, 254, 22, F(600,12)+'color:#343434', `Outfit${n===1?'':'s'} confirmed`, 'c');
+  h += box(73, 554, 254, 62, 'background:#f2f7f4;border-radius:12px');
+  h += txt(73, 563, 254, 16, F(600,12)+'color:#343434', 'This helps improve future trips', 'c');
+  h += txt(93, 581, 214, 30, F(400,11)+'color:#6b6b6b;white-space:normal;line-height:13px', 'Better outfit recs. Less overpacking. More of what you actually wear.', 'c');
+  h += btn(55, 659, 280, 50, `background:#1f4f3d;border:1px solid #78988b;border-radius:25px;${F(600,14)}color:#fff`, 'View My Packing Story', 'tab:profile');
+  h += btn(55, 718, 280, 46, `background:#fff;border:1px solid #1f4f3d;border-radius:23px;${F(600,14)}color:#1f4f3d`, 'Done', 'tab:trips');
+  return `<div class="fade">${STATUS}${h}</div>`;
+};
+
+/* ----- Story math (packing story + year in review) ----- */
+function story() {
+  const H = S.history || {trips:0, cities:{}, months:Array(12).fill(0), itemsPerTrip:[]};
+  const done = past();
+  const trips = H.trips + S.trips.length;
+  const cities = {...H.cities}; S.trips.forEach(t => { const c = city(t); if (c) cities[c] = (cities[c]||0) + 1; });
+  const fav = Object.entries(cities).sort((a,b) => b[1]-a[1])[0] || null;
+  const months = H.months.slice(); S.trips.forEach(t => months[pd(t.start).getMonth()]++);
+  const reviewed = done.filter(t => t.recap && t.recap.done);
+  const items = S.items.slice();
+  const byCat = c => items.filter(i => i.cat === c || (c === 'Tops' && i.cat === 'Tops')).sort((a,b) => (b.wears||0)-(a.wears||0))[0];
+  const topItem = items.slice().sort((a,b) => (b.wears||0)-(a.wears||0))[0];
+  const shirts = items.filter(i => i.type === 'Button-Down' || /Button-Down|Oxford|Blouse/.test(i.name)).sort((a,b) => (b.wears||0)-(a.wears||0));
+  const loved = items.filter(i => (i.loved||0) > 0).sort((a,b) => b.loved-a.loved)[0] || shirts[0] || topItem;
+  const skipped = items.filter(i => (i.packedCount||0) > 0 && !(i.wears||0)).sort((a,b) => b.packedCount - a.packedCount)[0] || null;
+  const colorCount = {}; items.forEach(i => { if (!['White','Black'].includes(i.color)) colorCount[i.color] = (colorCount[i.color]||0) + (i.wears||0); });
+  if (!Object.keys(colorCount).length) items.forEach(i => { colorCount[i.color] = (colorCount[i.color]||0) + (i.wears||0); });
+  Object.entries(H.colorWears||{}).forEach(([c,n]) => colorCount[c] = (colorCount[c]||0) + n);
+  const topColor = Object.entries(colorCount).sort((a,b) => b[1]-a[1])[0] || ['Grey', 0];
+  const colorHex = topColor[0] === 'Grey' ? '#b5b6b8' : (items.find(i => i.color === topColor[0])?.colorHex || '#b5b6b8');
+  const colorTrips = S.trips.filter(t => t.items.some(i => item(i)?.color === topColor[0])).length + ((H.colorPacked||{})[topColor[0]]||0);
+  const topOutfit = S.outfits.slice().sort((a,b) => (b.wears||0)-(a.wears||0))[0] || null;
+  const wornPct = t => t.packed.length ? Math.round(100 * (t.recap?.wornItems ?? t.packed.length) / t.packed.length) : 0;
+  const strongest = reviewed.slice().sort((a,b) => wornPct(b) - wornPct(a))[0] || done[0] || null;
+  const ipt = [...(H.itemsPerTrip||[]), ...done.slice().reverse().map(t => t.packed.length)];
+  const early = ipt.slice(0, Math.ceil(ipt.length/2)), late = ipt.slice(Math.ceil(ipt.length/2));
+  const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0;
+  const evo = early.length && late.length ? Math.round(100 * (avg(early) - avg(late)) / avg(early)) : 0;
+  const totWears = items.reduce((a,i)=>a+(i.wears||0),0), rewornItems = items.filter(i => (i.wears||0) > 1).length;
+  const carry = S.trips.filter(t => t.bags.includes('Carry-on')).length + (H.carry||0);
+  const basics = items.filter(i => i.type === 'T-Shirt').sort((a,b) => (b.wears||0)-(a.wears||0))[0] || topItem;
+  const personality = totWears && rewornItems / Math.max(1, items.length) > .5 ? ['Efficient','Rewearer.','You wear what you pack. No item left behind.'] : ['Curious','Explorer.','You like options. Each trip teaches Pack Light what you reach for.'];
+  const SL = {Minimalist:'Quiet luxury', Classic:'Quiet luxury', Casual:'Easy casual', Sporty:'Easy casual', Bohemian:'Soft romantic', Romantic:'Soft romantic', Vintage:'Soft romantic', Edgy:'Street edge', Streetwear:'Street edge', Trendy:'Street edge', Preppy:'Coastal prep', Coastal:'Coastal prep'};
+  const style = S.prefs.styles.length ? SL[S.prefs.styles[0]] : 'Quiet luxury';
+  const CO = ['Shoes','Accessories','Bottoms','Tops','Outerwear'];
+  const favPool = items.filter(i => i.fav).length ? items.filter(i => i.fav) : items;
+  const favItem = favPool.slice().sort((a,b) => (b.wears||0)-(a.wears||0) || CO.indexOf(a.cat)-CO.indexOf(b.cat))[0] || null;
+  const firstTrip = H.first ? {city:H.first.city, month:H.first.month} : (() => { const t = S.trips.slice().sort((a,b) => a.start.localeCompare(b.start))[0]; return t ? {city:city(t), month:MONTHS[pd(t.start).getMonth()]} : null; })();
+  return {trips, fav, months, reviewed, topItem, shirt:shirts[0], bottom:byCat('Bottoms'), shoe:byCat('Shoes'), acc:byCat('Accessories'), loved, skipped, topColor:topColor[0], colorHex, colorWears:topColor[1], topOutfit, strongest, wornPct, evo, carryPct: trips ? Math.round(100*carry/trips) : 0, rewornPct: items.length ? Math.floor(100*rewornItems/items.length) : 0, colorTrips, favItem, firstTrip, basics, personality, style, ready: reviewed.length > 0 || !!S.history};
+}
+
+/* ----- Profile ----- */
+R.profile = () => {
+  const st = story();
+  const populated = st.ready && S.items.length > 0;
+  let h = txt(20, 78, 352, 31, F(400,36,'T')+'color:#343434', 'Profile');
+  h += txt(20, 132, 352, 17, F(500,14,'Inter',1)+'color:#a8336b', 'Customize your preferences');
+  const initials = (S.user.name || 'SU').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  h += box(20, 173, 64, 64, 'background:#f0eadd;border-radius:32px;' + F(700,18) + 'color:#1f4f3d;display:flex;align-items:center;justify-content:center', initials);
+  h += txt(98, 186, 260, 21, F(600,17)+'color:#1a1a1a', esc(S.user.name));
+  h += txt(98, 207, 260, 16, F(400,13)+'color:#6b6b6b', esc(S.user.email));
+  let y;
+  if (!populated) {
+    h += box(20, 247, 352, 156, 'border-radius:22px;background:radial-gradient(120% 90% at 20% 0%,#2b5a45 0%,#1a4332 55%,#143524 100%)');
+    h += txt(34, 264, 300, 28, F(400,24,'T')+'color:#fff', 'Your packing story');
+    h += txt(34, 300, 312, 57, F(400,13)+'color:#fff;white-space:normal;line-height:19px', 'Take your first trip and confirm what you wore. Your stats, favorite item, and packing personality will live here.', 'wrap');
+    h += txt(34, 365, 312, 15, F(400,13,'T',1)+'color:#e8c892', 'Not enough data yet, your story starts after your first recap.');
+    y = 439;
+  } else {
+    h += box(20, 247, 352, 460, 'border-radius:22px;background:radial-gradient(130% 80% at 15% 0%,#2f5c47 0%,#1c4636 45%,#16392a 100%);box-shadow:0 8px 24px rgba(20,53,36,.18)');
+    h += txt(40, 277, 260, 28, F(400,21.7,'T')+'color:#fff', 'Your packing story') + txt(330, 277, 20, 28, F(400,20)+'color:#fff', '›');
+    h += hit(20, 262, 352, 50, 'go:yir', 'Year in review');
+    const fi = st.favItem;
+    h += box(40, 318, 312, 64, 'background:rgba(255,255,255,.1);border-radius:14px');
+    h += box(54, 325, 56, 52, 'background:#fff;border-radius:16px;overflow:hidden', fi && !fi.custom ? '' : '');
+    if (fi) h += fi.custom ? box(58,329,48,44,'',`<img src="${fi.custom}" alt="" style="width:100%;height:100%;object-fit:contain">`) : fitImg(fi, 58, 329, 48, 44, '');
+    h += txt(124, 330, 150, 14, F(400,11)+'color:rgba(255,255,255,.72);letter-spacing:1.1px', 'FAVORITE ITEM') + txt(250, 330, 90, 14, F(400,11)+'color:rgba(255,255,255,.72);letter-spacing:1.1px', `${fi?fi.wears:0} WEARS`, 'r');
+    h += txt(124, 346, 220, 26, F(400,20,'T')+'color:#fff', esc(fi ? fi.name : '—'));
+    // year chart
+    h += box(40, 396, 312, 156, 'background:#1f4f3d;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)');
+    h += txt(56, 406, 100, 36, F(400,32,'T')+'color:#fff', '2026');
+    h += txt(190, 410, 150, 15, F(700,9)+'color:#fff;letter-spacing:1.4px', 'YOUR YEAR', 'r');
+    h += txt(150, 424, 190, 15, F(400,9)+'color:#f5e8d0', `${st.trips} trips · ${st.carryPct}% carry-on use · ${st.rewornPct}% reworn`, 'r');
+    h += chart(st.months, 48, 440, 296, 64);
+    'JFMAMJJASOND'.split('').forEach((m, i) => { h += txt(48 + i * 26.2, 509, 13, 13, F(st.months[i]?700:400,8)+`color:${st.months[i]?'#fff':'#f5e8d0'}`, m, 'c'); });
+    let lastM = 11; while (lastM > 0 && !st.months[lastM]) lastM--;
+    h += txt(56, 523, 250, 15, F(400,9)+'color:#f5e8d0', `Average of ${(st.trips/(lastM+1)).toFixed(1)} trips per month`);
+    // personality
+    h += box(40, 566, 312, 92, 'background:rgba(255,255,255,.1);border-radius:14px');
+    h += txt(54, 580, 280, 14, F(400,11)+'color:rgba(255,255,255,.72);letter-spacing:1.1px', 'YOUR PACKING PERSONALITY');
+    h += txt(54, 598, 290, 28, F(400,21.8,'T')+'color:#fff', `The ${st.personality[0]} ${st.personality[1].replace('.','')}`);
+    h += txt(54, 628, 290, 17, F(400,12)+'color:rgba(255,255,255,.85)', st.personality[2]);
+    h += btn(20, 666, 352, 30, F(600,12)+'color:#fff', 'View 2026 in Review →', 'go:yir');
+    y = 745;
+  }
+  // preferences
+  const sec = (yy, t) => txt(20, yy, 200, 13, F(600,11)+'color:#a8336b;letter-spacing:1.32px;text-transform:uppercase', t);
+  const row = (yy, title, sub, act, subItalic) => {
+    let s = txt(20, yy, 300, 18, F(600,15)+'color:#1a1a1a', title);
+    if (sub) s += subItalic ? txt(20, yy + 20, 300, 12, F(500,10,'Inter',1)+'color:#a8336b', sub) : txt(20, yy + 20, 300, 15, F(400,12)+'color:#6b6b6b', sub);
+    s += txt(350, yy + 4, 12, 20, F(400,18)+'color:#9e9e9e', '›');
+    s += box(20, yy + 49, 345, 1, 'background:#e5e5e5');
+    s += hit(12, yy - 10, 368, 58, act, title);
+    return s;
+  };
+  h += sec(y, 'Your preferences'); y += 31;
+  const p = S.prefs;
+  h += row(y, 'Style Preferences', p.styles.length ? p.styles.join(', ') : 'Not set up yet, tap to personalize', 'go:style', !p.styles.length); y += 72;
+  h += row(y, 'Favorite Colors', p.colors.length ? '' : 'Not set up yet, tap to pick', 'go:colors', !p.colors.length);
+  if (p.colors.length) p.colors.slice(0,6).forEach((c, i) => { h += `<div class="a" style="left:${20+i*20}px;top:${y+22}px;width:16px;height:16px;border-radius:8px;background:${c};border:1px solid #e5e5e5"></div>`; });
+  y += 72;
+  h += row(y, 'Weather Comfort', p.weather ? {cold:'Runs Cold', comfortable:'Runs Comfortable', hot:'Runs Hot'}[p.weather] : 'Not set up yet, tap to pick', 'go:weather', !p.weather); y += 68;
+  const ecount = Object.values(p.essentials).flat().length;
+  h += row(y, 'Packing Essentials', ecount ? `${p.essentials.Toiletries.length} Toiletries · ${p.essentials.Tech.length} Technology · ${p.essentials.Basics.length} Basics` : 'Not set up yet, tap to set', 'go:essentials', !ecount); y += 88;
+  h += sec(y, 'Notifications & Sync'); y += 30;
+  h += txt(20, y, 250, 18, F(600,15)+'color:#1a1a1a', 'Weather alerts') + txt(20, y + 20, 250, 15, F(400,12)+'color:#6b6b6b', 'Daily forecast for your trip destination');
+  h += `<button class="toggle ${p.alerts?'on':''}" style="left:323px;top:${y+3}px" data-act="pref:alerts" aria-label="Weather alerts" aria-pressed="${p.alerts}"></button>` + box(20, y + 49, 345, 1, 'background:#e5e5e5'); y += 68;
+  h += txt(20, y, 250, 18, F(600,15)+'color:#1a1a1a', 'Calendar sync') + txt(20, y + 20, 250, 15, F(400,12)+'color:#6b6b6b', 'Pull trips from your work calendar');
+  h += `<button class="toggle ${p.calendar?'on':''}" style="left:323px;top:${y+3}px" data-act="pref:calendar" aria-label="Calendar sync" aria-pressed="${p.calendar}"></button>` + box(20, y + 49, 345, 1, 'background:#e5e5e5'); y += 86;
+  h += sec(y, 'Account'); y += 34;
+  h += row(y, 'Payment & Plan', 'Free prototype plan', 'soon:Payments', false); y += 60;
+  h += row(y, 'Connected Accounts', S.signedIn ? `1 account linked · ${S.provider}` : 'No accounts linked', 'soon:Accounts', false); y += 68;
+  h += row(y, 'Help & Support', '', 'soon:Support', false); y += 52;
+  h += btn(20, y, 352, 51, `background:#fffdf9;border:1px solid #e5e5e5;border-radius:16px;${F(700,16)}color:#143524`, 'Load demo data', 'demo'); y += 58;
+  h += btn(20, y, 352, 51, `background:#fff;border:1px solid #b83c3c;border-radius:16px;${F(700,16)}color:#b83c3c`, 'Reset all data', 'sheet:reset'); y += 70;
+  return scrollScreen(Math.max(852, y + 130), h, {nav:'profile'});
+};
+function chart(months, x, y, w, h) {
+  const max = Math.max(3, ...months);
+  const pts = months.map((m, i) => [i * (w / 11.4), h - (m / max) * (h - 8)]);
+  let last = months.length - 1; while (last > 0 && !months[last]) last--;
+  const used = pts.slice(0, Math.max(2, last + 2));
+  const d = 'M' + used.map(p => p.join(',')).join(' L') + ` L${used[used.length-1][0]},${h} L0,${h} Z`;
+  let s = `<svg class="a" style="left:${x}px;top:${y}px;overflow:visible" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">
+    <line x1="0" y1="8" x2="${w}" y2="8" stroke="rgba(245,232,208,.5)" stroke-dasharray="2 4"/>
+    <path d="${d}" fill="#a8336b"/>`;
+  used.forEach((p, i) => { if (months[i]) s += `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#d4a857"/>`; });
+  s += `</svg>` + txt(x - 2, y - 3, 10, 12, F(400,9)+'color:#f5e8d0', max);
+  return s;
+}
+
+/* ----- Preferences ----- */
+function prefHeader(title, big) {
+  let h = back(20, 64, 'tab:profile');
+  h += txt(0, 62, 392, 19, F(600,16)+'color:#1a1a1a', title, 'c');
+  if (big) h += txt(20, 100, 352, 30, F(400,26,'T')+'color:#1a1a1a', title);
+  return h;
+}
+R.style = () => {
+  const sel = U.prefDraft ?? (U.prefDraft = [...S.prefs.styles]);
+  let h = prefHeader('Style Preferences', true);
+  h += txt(20, 142, 352, 40, F(400,14)+'color:#6b6b6b;white-space:normal;line-height:20px', 'Pick the styles that describe you. Pack Light uses these to recommend outfits and suggest pieces.', 'wrap');
+  h += txt(20, 194, 352, 15, F(500,13,'Inter',1)+'color:#a8336b', sel.length ? `${sel.length} picked` : 'Nothing picked yet, tap any style to start.');
+  STYLES.forEach((s, i) => { const on = sel.includes(s); h += btn(i % 2 ? 201 : 20, 221 + Math.floor(i / 2) * 58, 171, 48, `background:${on?'#f2f7f4':'#fff'};border:1.5px solid ${on?'#1a4332':'#e5e5e5'};border-radius:12px;${F(600,13)}color:${on?'#143524':'#3d3d3d'}`, s, 'styletoggle:' + s); });
+  h += btn(20, 571, 352, 53, `background:#1a4332;border:1.5px solid #4a8a70;border-radius:16px;${F(700,17)}color:#fff`, 'Save', 'savestyle');
+  return scrollScreen(852, h);
+};
+R.colors = () => {
+  const sel = U.prefDraft ?? (U.prefDraft = [...S.prefs.colors]);
+  const pal = ['#ffffff','#1a1a1a','#cfd8e6','#1f4f3d','#c9a77c','#6b4a3a','#7b3b54','#f5e8d0','#2a3a6e','#9c9c9c','#b5503f','#d4a857'];
+  let h = prefHeader('Favorite Colors', true);
+  h += txt(20, 142, 352, 40, F(400,14)+'color:#6b6b6b;white-space:normal;line-height:20px', 'Pick the colors you reach for most. We’ll surface matching closet items first.', 'wrap');
+  h += txt(20, 194, 352, 15, F(500,13,'Inter',1)+'color:#a8336b', sel.length ? `${sel.length} picked` : 'No colors picked yet, tap any swatch to start.');
+  pal.forEach((c, i) => { const on = sel.includes(c); const x = 30 + (i % 4) * 88, y = 226 + Math.floor(i / 4) * 86; h += `<button class="a" data-act="colortoggle:${c}" aria-label="${c}" aria-pressed="${on}" style="left:${x}px;top:${y}px;width:64px;height:64px;border-radius:32px;background:${c};border:1px solid #e5e5e5;box-shadow:${on?'0 0 0 3px #fffdf9,0 0 0 5px #1a4332':'none'}"></button>`; });
+  h += btn(20, 571, 352, 53, `background:#1a4332;border:1.5px solid #4a8a70;border-radius:16px;${F(700,17)}color:#fff`, 'Save', 'savecolors');
+  return scrollScreen(852, h);
+};
+const WX = [['cold','🧊','I run cold','Layers, sweaters, an extra jacket just in case.',221,82,64],['comfortable','😊','I run comfortable','Average, flexible across most weather.',315,65,70],['hot','☀️','I run hot','Breathable fabrics, fewer layers, lighter packs.',392,82,76]];
+const wxFor = t => t < 67 ? 'cold' : t > 73 ? 'hot' : 'comfortable';
+const wxMsg = d => d.weather ? `${WX.find(w => w[0] === d.weather)[2]} · ideal ${d.temp}°F. Tap Save to keep it.` : 'Not set yet, pick what fits.';
+R.weather = () => {
+  const d = U.prefDraft ?? (U.prefDraft = {weather:S.prefs.weather, temp:S.prefs.temp || 70});
+  let h = prefHeader('Weather Comfort', true);
+  h += txt(20, 142, 352, 40, F(400,14)+'color:#6b6b6b;white-space:normal;line-height:20px', 'How do you handle temperature? Pack Light tunes recommendations to your comfort range.', 'wrap');
+  h += `<div class="t" id="wx-msg" style="left:20px;top:194px;width:352px;height:15px;${F(500,13,'Inter',1)}color:#a8336b">${wxMsg(d)}</div>`;
+  WX.forEach(([k, e, t, s, y, hh]) => {
+    const on = d.weather === k;
+    h += `<button class="a wx-card" data-act="wpick:${k}" data-wx="${k}" aria-pressed="${on}" style="left:20px;top:${y}px;width:352px;height:${hh}px"></button>`;
+    h += txt(36, y + hh/2 - 17, 34, 34, 'font-size:28px', e);
+    h += txt(78, y + 14, 240, 18, F(600,15)+'color:#1a1a1a', t) + txt(78, y + 34, 242, 34, F(400,12)+'color:#6b6b6b;white-space:normal', s, 'wrap');
+    h += `<div class="a wx-radio" data-wxr="${k}" style="left:334px;top:${y + hh/2 - 11}px"><svg width="12" height="10" viewBox="0 0 12 10" aria-hidden="true"><path d="M1.5 5.2l3 3 6-6.4" fill="none" stroke="#0f4b32" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+  });
+  h += txt(20, 486, 200, 17, F(600,14)+'color:#1a1a1a', 'Ideal temperature');
+  h += box(20, 515, 352, 44, 'background:#fff;border:1.5px solid #e5e5e5;border-radius:12px');
+  h += `<input type="range" class="wx-range${d.weather?'':' unset'}" id="wx-temp" min="50" max="90" step="1" value="${d.temp}" aria-label="Ideal temperature" style="left:30px;top:523px;width:296px;--p:${(d.temp-50)/40*100}%">`;
+  h += `<div class="t" id="tempv" style="left:326px;top:529px;width:36px;height:16px;text-align:right;${F(600,13)}color:#343434">${d.weather ? d.temp + '°' : ''}</div>`;
+  h += btn(20, 571, 352, 53, `background:#1a4332;border:1.5px solid #4a8a70;border-radius:16px;${F(700,17)}color:#fff`, 'Save', 'saveweather');
+  return scrollScreen(852, h);
+};
+// update the weather screen in place, no re-render, so taps and drags feel instant
+const $$ = q => [...dev.querySelectorAll(q)];
+function wxSync() {
+  const d = U.prefDraft; if (!d) return;
+  $$('.wx-card').forEach(c => c.setAttribute('aria-pressed', c.dataset.wx === d.weather));
+  $$('.wx-radio').forEach(r => r.classList.toggle('on', r.dataset.wxr === d.weather));
+  const r = $('#wx-temp'); if (r) {
+    r.value = d.temp; r.style.setProperty('--p', (d.temp - 50) / 40 * 100 + '%'); r.classList.toggle('unset', !d.weather);
+  }
+  const v = $('#tempv'); if (v) v.textContent = d.weather ? d.temp + '°' : '';
+  const m = $('#wx-msg'); if (m) m.textContent = wxMsg(d);
+}
+R.essentials = () => {
+  const e = S.prefs.essentials;
+  let h = prefHeader('Packing Essentials', false);
+  h += txt(20, 100, 352, 40, F(400,14)+'color:#6b6b6b;white-space:normal;line-height:20px', 'These items auto-fill the Packing tab for every trip. Basics scale by trip length.', 'wrap');
+  let y = 152;
+  [['Toiletries','+ Add essential'],['Tech','+ Add tech item'],['Basics','+ Add a basic']].forEach(([g, label]) => {
+    const list = e[g]; const editing = U.essEdit === g;
+    const H = 128 + Math.max(0, list.length - 1) * 30 + (list.length ? 0 : 0);
+    h += box(20, y, 352, H, 'background:#fff;border:1px solid #e5e5e5;border-radius:16px');
+    h += txt(36, y + 16, 200, 21, F(400,18,'T')+'color:#1a1a1a', g);
+    let yy = y + 47;
+    if (!list.length) { h += txt(36, yy, 320, 19, F(400,13)+'color:#9e9e9e', 'Nothing here yet, add your first item below.'); yy += 29; }
+    list.forEach(l => { h += txt(36, yy, 260, 19, F(500,14)+'color:#343434', esc(l)) + btn(318, yy - 4, 38, 26, F(600,13)+'color:#9e9e9e', '✕', `essdel:${g}:${l}`, 'Remove ' + l); yy += 30; });
+    if (!list.length) yy -= 0; else yy -= 1;
+    if (editing) {
+      h += `<input class="field" id="ess-${g}" placeholder="${g==='Tech'?'e.g. Phone charger':g==='Basics'?'e.g. Socks':'e.g. Toothbrush'}" style="left:36px;top:${yy}px;width:236px;height:36px;border-radius:10px;font-size:13px;padding:0 12px" autocomplete="off">`;
+      h += btn(278, yy, 78, 36, `background:#1a4332;border-radius:10px;${F(600,13)}color:#fff`, 'Add', 'essadd:' + g);
+    } else {
+      h += btn(36, yy, 320, 36, `background:#fffdf9;border:1.5px solid #e5e5e5;border-radius:10px;${F(600,13)}color:#1a4332`, label, 'essedit:' + g);
+    }
+    y += H + 12;
+  });
+  if (!Object.values(e).flat().length) h += btn(20, y + 4, 352, 44, F(600,13)+'color:#1a4332', '✦ Start with the Pack Light defaults', 'essdefaults');
+  return scrollScreen(Math.max(852, y + 80), h);
+};
+
+/* ----- Year in review ----- */
+R.yir = () => {
+  const st = story();
+  const cards = yirCards(st);
+  let h = '';
+  cards.forEach((c, i) => { h += `<div class="a cardsnap" style="left:16px;top:${176 + i*630}px;width:360px;height:580px;border-radius:22px;overflow:hidden;background:${c.bg}">${c.html}</div>`; });
+  const head = `<div class="a" style="left:0;top:45px;width:392px;height:115px;background:linear-gradient(#fffdf9 0,#fffdf9 105px,rgba(255,253,249,0) 115px);z-index:20">
+      ${txt(0, 39, 392, 16, F(400,11,'T')+'color:#6b6b6b;letter-spacing:2.2px', 'YEAR IN REVIEW', 'c')}
+      ${txt(0, 63, 392, 30, F(400,20,'T')+'color:#1f4f3d', '2026', 'c')}
+      ${img('ic_back.png', 63, 52, 15, 17)}${hit(50, 40, 42, 42, 'tab:profile', 'Back')}</div>`;
+  return scrollScreen(176 + cards.length * 630 + 40, h, {after: head});
+};
+function yirCards(st) {
+  const cream = '#f8f4ed', green = '#1a4332', berry = '#a8336b', mustard = '#d4a857', paper = '#fffdf9';
+  const N = 17; let k = 0;
+  const num = c => { k++; return txt(24, 22, 80, 16, F(700,10)+`color:${c};letter-spacing:1.4px`, `${String(k).padStart(2,'0')}/${N}`); };
+  const lab = (t, c) => txt(24, 56, 312, 17, F(700,11)+`color:${c};letter-spacing:1.6px`, t);
+  const body = (t, c) => txt(24, 450, 312, 48, F(400,13)+`color:${c};white-space:normal;line-height:normal`, t, 'wrap');
+  const share = (bg, c, title) => btn(24, 520, 312, 36, `background:${bg};border-radius:18px;${F(600,12)}color:${c}`, 'Share', 'yirshare:' + (k - 1));
+  const big = (t, c, y, s, extra='') => txt(0, y, 360, s * 1.12, F(400,s,'T')+`color:${c};${extra}`, t, 'c');
+  const cap = (t, c, y) => txt(0, y, 360, 18, F(700,11)+`color:${c};letter-spacing:1.6px`, t, 'c');
+  const itemFrame = (it) => {
+    let s = box(80, 168, 200, 220, 'background:#fff;border-radius:16px;overflow:hidden');
+    if (it) s += it.custom ? box(96, 186, 168, 184, '', `<img src="${it.custom}" alt="" style="width:100%;height:100%;object-fit:contain">`) : fitImg(it, 100, 190, 160, 176, '');
+    return s;
+  };
+  const cards = [];
+  const name = (S.user.name || 'Sample User').split(' ')[0] === 'Sample' ? S.user.name : S.user.name;
+  // 01
+  cards.push({bg:cream, html: num(berry) + lab('PACK LIGHT · 2026', berry) + txt(24, 84, 312, 44, F(400,36,'T')+'color:#1f4f3d', 'Your year,') + txt(24, 124, 312, 44, F(400,36,'T',1)+'color:#a8336b', 'wrapped.') + big('2026', '#1a4332', 218, 110) + body(`${st.trips} trips this year. Swipe to see what the rest of your year looked like.`, '#1f4f3d') + share('#1f4f3d', '#fff', 'Your year')});
+  // 02
+  cards.push({bg:green, html: num('#fff') + lab('WHERE YOU WENT', '#fff') + txt(24, 84, 312, 40, F(400,34,'T')+'color:#fff', 'Adventures,') + txt(24, 120, 312, 40, F(400,34,'T',1)+'color:#f5e8d0', 'archived.') + big(st.trips, '#f5e8d0', 210, 124) + cap('TRIPS PLANNED', '#fff', 342) + body(st.fav ? `${st.fav[0]} was your favorite, ${st.fav[1]} visit${st.fav[1]===1?'':'s'} this year.` : 'Plan a trip to start your map.', '#fff') + share('#fff', '#1a4332', 'Adventures')});
+  // 03
+  const US = 'AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC'.split(' ');
+  const intl = S.trips.filter(t => { const m = (t.dest||'').match(/,\s*([A-Za-z]{2})$/); return t.dest && !(m && US.includes(m[1].toUpperCase())); }).sort((a,b) => a.start.localeCompare(b.start))[0];
+  const rows = [['○', 'First trip', st.firstTrip ? `${st.firstTrip.city}, ${st.firstTrip.month}` : '—'], ['○', intl ? 'First international' : 'Longest trip', intl ? `${city(intl)} - ${days(intl)} days${intl.bags.length===1&&intl.bags[0]==='Carry-on'?' carry-on only':''}` : (() => { const t = S.trips.slice().sort((a,b) => days(b)-days(a))[0]; return t ? `${city(t)} - ${days(t)} days` : '—'; })()], ['◎', 'Most visited', st.fav ? `${st.fav[0]} - ${st.fav[1]} visits this year` : '—']];
+  let r3 = num('#fff') + lab('YEAR OF FIRSTS', '#fff') + txt(24, 84, 312, 36, F(400,30,'T')+'color:#fff', `${esc(name)}’s 2026,`) + txt(24, 116, 312, 36, F(400,30,'T',1)+'color:#f5e8d0', 'captured.');
+  rows.forEach((r, i) => { r3 += box(24, 188 + i * 64, 312, 56, 'background:rgba(255,255,255,.08);border-radius:10px') + txt(36, 188 + i*64, 20, 56, F(400,16)+'color:#f5e8d0', r[0]) + txt(62, 196 + i*64, 262, 19, F(600,13)+'color:#fff', r[1]) + txt(62, 215 + i*64, 262, 17, F(400,11)+'color:#f5e8d0', esc(r[2])); });
+  cards.push({bg:green, html: r3 + share('#fff', '#1a4332', 'Year of firsts')});
+  // 04
+  cards.push({bg:berry, html: num('#fff') + lab('YOUR PACKING PERSONALITY', '#fff') + txt(24, 84, 312, 54, F(400,44,'T')+'color:#fff', st.personality[0]) + txt(24, 134, 312, 54, F(400,44,'T',1)+'color:#fff', st.personality[1]) + txt(24, 238, 312, 130, F(400,17,'T',1)+'color:rgba(255,255,255,.88);white-space:normal;line-height:1.4', `"${st.personality[2]}"`, 'wrap') + share('#fff', '#a8336b', 'Packing personality')});
+  // 05
+  const styleWords = String(st.style).split(' ');
+  cards.push({bg:berry, html: num('#fff') + lab('YOUR FASHION STYLE', '#fff') + txt(24, 84, 312, 52, F(400,42,'T')+'color:#fff', esc(styleWords[0])) + txt(24, 132, 312, 52, F(400,42,'T',1)+'color:#fff', esc((styleWords.slice(1).join(' ') || 'style') + '.')) + txt(24, 264, 312, 100, F(400,15,'T',1)+'color:rgba(255,255,255,.88);white-space:normal;line-height:1.4', '"Restraint, repetition, and intention. You wear less but it always lands."', 'wrap') + body('Based on the colors, categories, and occasions you actually wore.', '#fff') + share('#fff', '#a8336b', 'Fashion style')});
+  // 06
+  const pk = st.colorTrips;
+  cards.push({bg:cream, html: num(berry) + lab('COLOR OF THE YEAR', berry) + txt(24, 84, 312, 56, F(400,44,'T')+'color:#1f4f3d', esc(st.topColor) + '.') + box(110, 190, 140, 140, `border-radius:70px;background:${st.colorHex === '#ffffff' ? '#ece9e4' : st.colorHex}`) + cap(`${st.colorWears} WEARS`, '#1f4f3d', 360) + txt(0, 382, 360, 18, F(400,12)+'color:#6b6b6b', `Packed on ${pk} of ${st.trips} trips.`, 'c') + body(`You kept reaching for ${esc(st.topColor)}. Whether intentional or not, this shade became a signature part of your travel style.`, '#1f4f3d') + share('#1f4f3d', '#fff', 'Color of the year')});
+  // 07
+  const o = st.topOutfit;
+  let r7 = num(berry) + lab('MOST WORN OUTFIT', berry) + txt(24, 84, 312, 36, F(400,30,'T')+'color:#1f4f3d', esc(o ? o.name : '—'));
+  r7 += box(90, 176, 180, 180, 'background:#b33481;border-radius:16px');
+  if (o) o.items.slice(0,4).forEach((iid, j) => { const it = item(iid); const x = 102 + (j%2)*80, y = 188 + Math.floor(j/2)*80; r7 += box(x, y, 76, 76, 'background:#fff;border-radius:8px'); if (it && !it.custom) r7 += fitImg(it, x + 6, y + 6, 64, 64, ''); });
+  cards.push({bg:cream, html: r7 + body(o ? `Worn ${o.wears||0} times, your go-to combination.` : 'Confirm a trip recap to find your go-to look.', '#1f4f3d') + share('#1f4f3d', '#fff', 'Most worn outfit')});
+  // 08-11
+  [['MOST WORN SHIRT', st.shirt], ['MOST WORN BOTTOM', st.bottom], ['MOST WORN SHOE', st.shoe], ['MOST WORN ACCESSORY', st.acc]].forEach(([l, it], j) => {
+    const nm = it ? it.name : '—';
+    const every = it && it.wears >= st.trips;
+    let tt = j === 3 && it ? txt(24, 84, 312, 40, F(400,32,'T')+'color:#fff', 'Luxury') + txt(24, 120, 312, 40, F(400,32,'T',1)+'color:#fff', esc(nm)) : txt(24, 84, 312, 40, F(400,32,'T')+'color:#fff', esc(nm));
+    cards.push({bg:mustard, html: num('#fff') + lab(l, '#fff') + tt + itemFrame(it) + body(it ? `Worn on ${it.wears} confirmed trips. ${every ? 'You brought this on every trip!' : 'Your go-to in this category.'}` : 'Nothing confirmed here yet.', '#fff') + share('#fff', '#5c4214', l)});
+  });
+  // 12 loved
+  const lv = st.loved;
+  cards.push({bg:berry, html: num('#fff') + lab('MOST LOVED ITEM', '#fff') + txt(24, 84, 312, 40, F(400,32,'T')+'color:#fff', esc(lv ? lv.name : '—')) + box(80, 168, 200, 200, 'background:#fff;border-radius:16px') + (lv && !lv.custom ? fitImg(lv, 100, 182, 160, 172, '') : '') + txt(0, 222, 360, 100, F(700,64)+'color:#a8336b;opacity:.92', '♥', 'c') + body(lv ? `You rated this Loved on ${lv.loved||1} trip${(lv.loved||1)===1?'':'s'}. The piece that always felt right.` : 'Mark looks as Loved in a recap.', '#fff') + share('#fff', '#a8336b', 'Most loved')});
+  // 13 skipped
+  const sk = st.skipped;
+  const skw = sk ? sk.name.split(' ') : ['Nothing', 'skipped'];
+  cards.push({bg:green, html: num('#fff') + lab('THE ONE YOU SKIPPED', '#fff') + txt(24, 84, 312, 44, F(400,36,'T')+'color:#fff', esc(skw[0])) + txt(24, 124, 312, 44, F(400,36,'T',1)+'color:#f5e8d0', esc(skw.slice(1).join(' ').toLowerCase() || '') + '.') + big(sk ? `${sk.packedCount}×` : '0×', '#f5e8d0', 218, 120) + cap('PACKED AND NEVER WORN', '#fff', 372) + body(sk ? `It came with you ${sk.packedCount} times and stayed in the bag. Worth leaving home next year?` : 'Everything you packed got worn. Impressive.', '#fff') + share('#fff', '#1a4332', 'Skipped')});
+  // 14 evolution
+  cards.push({bg:berry, html: num('#fff') + lab('YOUR EVOLUTION', '#fff') + txt(24, 84, 312, 38, F(400,30,'T')+'color:#fff', st.evo >= 0 ? 'Lighter as' : 'Fuller as') + txt(24, 118, 312, 38, F(400,30,'T',1)+'color:#fff', 'the year went on.') + big(`${st.evo >= 0 ? '↓' : '↑'} ${Math.abs(st.evo)}%`, '#fff', 206, 84) + cap(st.evo >= 0 ? 'FEWER ITEMS PER TRIP' : 'MORE ITEMS PER TRIP', '#fff', 320) + body(`Your recent trips averaged ${st.evo >= 0 ? 'fewer' : 'more'} items than the year's start.`, '#fff') + share('#fff', '#a8336b', 'Evolution')});
+  // 15 strongest
+  const sg = st.strongest; const pct = sg ? st.wornPct(sg) : 0;
+  cards.push({bg:cream, html: num(berry) + lab('YOUR STRONGEST TRIP', berry) + txt(24, 84, 312, 40, F(400,32,'T')+'color:#1f4f3d', esc(sg ? city(sg) : '—') + ',') + txt(24, 120, 312, 40, F(400,32,'T',1)+'color:#a8336b', pct + '%.') + big(pct + '%', '#1a4332', 210, 100) + cap('OF WHAT YOU PACKED GOT WORN', '#1f4f3d', 348) + body(sg ? `You wore ${sg.recap?.wornItems ?? sg.packed.length} of ${sg.packed.length} packed items. ${pct===100?'Pure execution.':'Next time, pack a little lighter.'}` : 'Review a trip to see this.', '#1f4f3d') + share('#1f4f3d', '#fff', 'Strongest trip')});
+  // 16 basic
+  const b = st.basics;
+  cards.push({bg:paper, html: num(berry) + lab('MOST VALUABLE BASIC', berry) + txt(24, 84, 312, 44, F(400,36,'T')+'color:#1f4f3d', esc(b ? b.name.replace('T-Shirt','tee') : '—') + '.') + itemFrame(b).replace('background:#fff;border-radius:16px','background:#f8f4ed;border-radius:16px') + body(b ? `${b.wears} wears across casual and travel days. The piece you'd buy again, instantly.` : '', '#1f4f3d') + share('#1f4f3d', '#fff', 'Basic')});
+  // 17 share
+  let r17 = num(berry) + lab('SHARE YOUR YEAR', berry) + txt(24, 84, 312, 34, F(400,26,'T')+'color:#1f4f3d', `${esc(name)}’s 2026,`) + txt(24, 114, 312, 34, F(400,26,'T',1)+'color:#1f4f3d', 'in one card.');
+  r17 += box(24, 176, 312, 280, 'background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(0,0,0,.06)') + txt(40, 192, 250, 18, F(400,14,'T',1)+'color:#1f4f3d', 'Pack Light  ·  2026');
+  [['PERSONALITY', st.personality[0] + ' ' + st.personality[1].replace('.','')], ['STYLE', st.style], ['COLOR', st.topColor], ['TRIPS', st.trips]].forEach(([l, v], j) => { const x = 40 + (j%2)*146, y = 224 + Math.floor(j/2)*96; r17 += box(x, y, 134, 84, 'background:#f8f4ed;border-radius:10px') + txt(x + 12, y + 12, 110, 12, F(700,9)+'color:#a8336b;letter-spacing:1.4px', l) + txt(x + 12, y + 32, 110, 40, F(400,15,'T')+'color:#1f4f3d;white-space:normal', esc(v), 'wrap'); });
+  cards.push({bg:paper, html: r17 + share('#1f4f3d', '#fff', 'Year card')});
+  return cards;
+}
+
+/* ============================================================
+   SHEETS
+   ============================================================ */
+function sheetHTML() {
+  const s = U.sheet; if (!s) return '';
+  let o = `<div class="overlay" data-act="closesheet"></div>`;
+  if (s === 'add') {
+    o += `<div class="sheet" style="bottom:0;height:417px"><div class="grab" style="top:23px"></div>` + txt(0, 42, 392, 30, F(400,24,'T')+'color:#343434', 'Add Item', 'c')
+      + `<button class="a chip-press" data-act="go:camera" style="left:33px;top:91px;width:326px;height:76px;background:#fffdfc;border:1px solid #d9d9d9;border-radius:10px"></button>` + img('ic_takephoto.png', 80, 113, 32, 28) + txt(124, 118, 200, 22, F(600,14)+'color:#343434;pointer-events:none', 'Take a Photo')
+      + `<button class="a chip-press" data-act="upload" style="left:33px;top:179px;width:326px;height:76px;background:#fffdfc;border:1px solid #d9d9d9;border-radius:10px"></button>` + img('ic_roll.png', 80, 199, 34, 32) + txt(124, 205, 220, 22, F(600,14)+'color:#343434;pointer-events:none', 'Upload from Camera Roll')
+      + btn(146, 282, 100, 36, F(600,14)+'color:#0f4b32', 'Cancel', 'closesheet') + `</div>`;
+  } else if (s === 'filter') {
+    const f = U.filters;
+    o += `<div class="sheet" style="bottom:0;height:599px"><div class="grab" style="top:40px"></div><div style="position:absolute;left:0;top:27px;width:392px;height:572px">`
+      + btn(22, 36, 60, 30, F(600,14)+'color:#808080', 'Reset', 'clearfilters:keep') + txt(0, 36, 392, 30, F(400,24,'T')+'color:#343434', 'Filters', 'c') + btn(306, 36, 60, 30, F(600,14)+'color:#0f4b32', 'Done', 'closesheet')
+      + txt(33, 92, 120, 22, F(600,14)+'color:#343434', 'Category');
+    [['Tops',37,28],['Bottoms',95,51],['Shoes',169,36],['Outerwear',224,61],['Acc.',310,28]].forEach(([c, x, w]) => { const on = f.cats.includes(c); o += `<button class="a" data-act="fcat:${c}" aria-pressed="${on}" style="left:${x-8}px;top:118px;width:${w+16}px;height:48px"><span style="position:absolute;left:50%;top:6px;transform:translateX(-50%);width:15px;height:15px;border-radius:50%;border:1px solid ${on?'#0f4b32':'#808080'};background:${on?'#0f4b32':'transparent'};box-shadow:inset 0 0 0 2px ${on?'#fff':'transparent'}"></span><span style="position:absolute;left:0;right:0;top:27px;text-align:center;${F(500,12)}color:#343434">${c}</span></button>`; });
+    o += txt(33, 190, 120, 22, F(600,14)+'color:#343434', 'Color');
+    COLORS.forEach((c, i) => { const on = f.colors.includes(c); o += `<button class="a" data-act="fcolor:${c}" aria-label="${COLOR_NAMES[c]}" aria-pressed="${on}" style="left:${40 + i*28}px;top:219px;width:23px;height:23px;border-radius:50%;background:${c};border:1px solid #808080;box-shadow:${on?'0 0 0 2px #fffdfc,0 0 0 3.5px #0f4b32':'none'}"></button>`; });
+    o += txt(33, 274, 120, 22, F(600,14)+'color:#343434', 'Season');
+    [['Spring',23,71],['Summer',106,84],['Fall',202,48],['Winter',262,73]].forEach(([s2, x, w]) => { const on = f.seasons.includes(s2); o += btn(x, 301, w, 32, `border-radius:16px;border:1px solid ${on?'#0f4b32':'#d9d9d9'};background:${on?'#f6faf6':'#fffdfc'};${F(600,14)}color:#343434`, s2, 'fseason:' + s2); });
+    o += txt(33, 356, 120, 22, F(600,14)+'color:#343434', 'Use');
+    [['Work',23,383,61],['Casual',96,383,70],['Travel',178,383,65],['Dinner',255,383,71],['Beach',21,431,68],['Going Out',101,431,96],['Meetings',209,431,87],['Hike',308,431,53],['Museum',21,479,85],['Sightseeing',118,479,104],['Shopping',234,479,92]].forEach(([u, x, y, w]) => { const on = f.uses.includes(u); o += btn(x, y, w, 32, `border-radius:16px;border:1px solid ${on?'#1f4f3d':'#d9d9d9'};background:${on?'#f6faf6':'#fffdfc'};${F(600,14)}color:#343434`, u, 'fuse:' + u); });
+    o += `</div></div>`;
+  } else if (s === 'addtotrip' || s === 'tripfor' || s === 'packtrip') {
+    const ups = upcoming();
+    const H = 108 + Math.max(1, ups.length) * 118 + (ups.length ? 0 : 60);
+    const title = s === 'addtotrip' ? 'Add to Trip' : s === 'packtrip' ? 'Pack for…' : 'Generate for…';
+    const sub = s === 'addtotrip' ? `Adding ${U.selected.length} item${U.selected.length===1?'':'s'} to:` : s === 'packtrip' ? 'Pick a trip to pack for:' : 'Pick a trip to build looks for:';
+    o += `<div class="sheet" style="bottom:0;height:${H}px"><div class="grab" style="top:14px"></div>` + btn(22, 28, 60, 34, F(600,14)+'color:#808080', 'Cancel', 'closesheet') + txt(0, 29, 392, 22, F(400,24,'T')+'color:#343434', title, 'c') + txt(0, 55, 392, 17, F(400,12)+'color:#808080', sub, 'c');
+    if (!ups.length) o += txt(20, 96, 352, 40, F(400,13)+'color:#8f8f8f', 'No upcoming trips yet.', 'c') + btn(96, 136, 200, 40, 'background:#0f4b32;border-radius:20px;'+F(600,12)+'color:#fff', 'Plan a trip', 'go:addtrip');
+    ups.forEach((t, i) => {
+      const y = 80 + i * 118;
+      o += box(16, y, 360, 106, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:12px');
+      const ph = tripPhoto(t);
+      o += ph ? img(ph + '.jpg', 30, y + 16, 67, 73, 'border-radius:7px;object-fit:cover') : box(30, y + 16, 67, 73, 'background:#dfd7cb;border-radius:7px');
+      o += txt(114, y + 28, 230, 20, F(700,15)+'color:#6a6a6a', esc(t.name)) + txt(113, y + 49, 240, 17, F(400,13)+'color:#8f8f8f', `${range(t,'sheet')} · ${days(t)} days`);
+      o += img('ic_chev.png', 353, y + 47, 7, 12) + hit(16, y, 360, 106, (s === 'addtotrip' ? 'addto:' : s === 'packtrip' ? 'packfor:' : 'genfor:') + t.id, t.name);
+    });
+    o += `</div>`;
+  } else if (s === 'tripfilter') {
+    const trips = [...past(), ...upcoming()];
+    const H = 211 + (trips.length + 1) * 60 - 60 + 60;
+    o += `<div class="sheet" style="bottom:0;height:${H}px;border-radius:28px 28px 0 0;background:#fffdf9"><div class="grab"></div>` + txt(32, 36, 328, 30, F(400,22,'T')+'color:#1a1a1a', 'Filter by trip') + txt(32, 68, 328, 18, F(400,12)+'color:#6b6b6b', 'Show outfits from a specific trip, or see them all.');
+    const rowT = (y, label, sub, on, act) => btn(16, y, 360, 52, `background:${on?'#ebe6de':'#fff'};border:1px solid #e5e5e5;border-radius:12px;flex-direction:column;align-items:flex-start;padding:0 16px`, `<span style="${F(600,14)}color:#1a1a1a">${esc(label)}</span><span style="${F(400,11)}color:#6b6b6b">${sub}</span>${on?`<span style="position:absolute;right:14px;top:16px;${F(700,14)}color:#1f4f3d">✓</span>`:''}`, act);
+    o += rowT(108, 'All trips', `${S.outfits.length} outfit${S.outfits.length===1?'':'s'} total`, !U.outfitTrip, 'otrip:');
+    trips.forEach((t, i) => { const n = tripOutfits(t).length; o += rowT(168 + i * 60, t.name, `${n} outfit${n===1?'':'s'}`, U.outfitTrip === t.id, 'otrip:' + t.id); });
+    o += btn(16, 168 + trips.length * 60 + 12, 360, 36, F(600,14)+'color:#6b6b6b', 'Cancel', 'closesheet') + `</div>`;
+  } else if (s === 'additems') {
+    const t = trip(U.sheetTrip);
+    const list = S.items.filter(i => !t.items.includes(i.id));
+    const H = Math.min(700, 120 + Math.ceil(list.length / 3) * 118);
+    o += `<div class="sheet" style="bottom:0;height:${H}px"><div class="grab"></div>` + btn(22, 24, 60, 30, F(600,14)+'color:#808080', 'Cancel', 'closesheet') + txt(0, 26, 392, 26, F(400,22,'T')+'color:#343434', 'Add from Closet', 'c') + btn(306, 24, 70, 30, F(600,14)+'color:#0f4b32', 'Done', 'closesheet');
+    o += `<div class="a" style="left:0;top:70px;width:392px;height:${H-70}px;overflow-y:auto">`;
+    if (!list.length) o += txt(20, 20, 352, 40, F(400,13)+'color:#8f8f8f', 'Everything in your closet is already on this list.', 'c');
+    list.forEach((it, i) => { const x = 18 + (i % 3) * 120, y = 6 + Math.floor(i / 3) * 118; o += `<button class="a chip-press" data-act="additem:${t.id}:${it.id}" style="left:${x}px;top:${y}px;width:112px;height:110px;background:#fffdfc;border:1px solid #f2f1ef;border-radius:10px"></button>` + (it.custom ? box(x+16,y+8,80,72,'pointer-events:none',`<img src="${it.custom}" alt="" style="width:100%;height:100%;object-fit:contain">`) : fitImg(it, x + 16, y + 8, 80, 72, '')) + txt(x + 4, y + 84, 104, 18, F(600,11)+'color:#343434;pointer-events:none;overflow:hidden', esc(it.name), 'c'); });
+    o += `</div></div>`;
+  } else if (s === 'calendar') {
+    const evs = calEvents(); const H = 150 + evs.length * 70 + 60;
+    o += `<div class="sheet" style="bottom:0;height:${H}px"><div class="grab" style="top:14px"></div>` + btn(22, 28, 60, 34, F(600,14)+'color:#808080', 'Cancel', 'closesheet') + txt(0, 29, 392, 26, F(400,24,'T')+'color:#343434', 'Import from Calendar', 'c')
+      + txt(30, 60, 332, 17, F(400,12)+'color:#808080', U.icsEvents && U.icsEvents.length ? 'Upcoming events from your calendar file:' : 'Sample events. Upload your own calendar below.', 'c');
+    evs.forEach((ev, i) => { const y = 92 + i * 70; const t = {start:ev.start, end:ev.end};
+      o += btn(16, y, 360, 60, 'background:#fefefe;border:1px solid #e9e9e9;border-radius:12px;flex-direction:column;align-items:flex-start;padding:0 16px 0 58px', `<span style="${F(700,14)}color:#343434">${esc(ev.name)}</span><span style="${F(400,12)}color:#8f8f8f">${range(t,'short')}${ev.dest?' · '+esc(ev.dest):''}</span>`, 'calpick:' + i);
+      o += img('ic_calendar.png', 32, y + 18, 24, 24, 'pointer-events:none;mix-blend-mode:multiply');
+    });
+    o += btn(16, 92 + evs.length * 70 + 4, 360, 44, `background:#fffdf9;border:1.5px dashed #c9c9c9;border-radius:12px;${F(600,13)}color:#1a4332`, 'Upload a calendar file (.ics)', 'calfile') + `</div>`;
+  } else if (s === 'recapedit') {
+    const e = U.recapEdit; const ot = outfit(e.oid);
+    const pool = [...new Set([...ot.items, ...e.items, ...S.items.map(i => i.id)])].map(item).filter(Boolean);
+    o += `<div class="sheet" style="bottom:0;height:640px"><div class="grab" style="top:14px"></div>` + btn(22, 26, 60, 34, F(600,14)+'color:#808080', 'Cancel', 'closesheet') + txt(0, 28, 392, 28, F(400,22,'T')+'color:#343434', 'Edit what you wore', 'c') + btn(306, 26, 70, 34, F(600,14)+'color:#0f4b32', 'Save', 'resave');
+    o += txt(20, 62, 352, 17, F(400,12)+'color:#808080', `${esc(ot.name)} · tap pieces to add or remove`, 'c');
+    o += `<div class="a" style="left:0;top:90px;width:392px;height:420px;overflow-y:auto">`;
+    pool.forEach((it, i) => { const on = e.items.includes(it.id); const x = 18 + (i % 3) * 120, y = 4 + Math.floor(i / 3) * 118;
+      o += `<button class="a chip-press" data-act="reitem:${it.id}" aria-pressed="${on}" style="left:${x}px;top:${y}px;width:112px;height:110px;background:${on?'#f2f7f4':'#fffdfc'};border:1.5px solid ${on?'#1a4332':'#f2f1ef'};border-radius:10px"></button>` + (it.custom ? box(x+16,y+8,80,72,'pointer-events:none',`<img src="${it.custom}" alt="" style="width:100%;height:100%;object-fit:contain">`) : fitImg(it, x + 16, y + 8, 80, 72, 'mix-blend-mode:multiply')) + txt(x + 4, y + 84, 104, 18, F(600,11)+'color:#343434;overflow:hidden', esc(it.name), 'c')
+        + (on ? `<div class="a" style="left:${x+88}px;top:${y+8}px;width:16px;height:16px;border-radius:50%;background:#1a4332;pointer-events:none;display:flex;align-items:center;justify-content:center"><svg width="9" height="7" viewBox="0 0 9 7" aria-hidden="true"><path d="M1 3.5l2.2 2.2L8 1" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>` : ''); });
+    o += `</div>` + txt(20, 522, 200, 17, F(600,13)+'color:#343434', 'Note');
+    o += `<textarea class="note" id="re-note" style="left:20px;top:546px;width:352px;height:64px" placeholder="Note (e.g. ‘shoes hurt after walking all day’)">${esc(e.note)}</textarea></div>`;
+  } else if (s === 'yirshare') {
+    const cards = yirCards(story()); const c = cards[U.shareIdx] || cards[0];
+    const SI = {"story": "<circle cx=\"12\" cy=\"12\" r=\"8.5\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.8\" stroke-dasharray=\"4 2.2\"/><path d=\"M12 8.5v7M8.5 12h7\" stroke=\"#fff\" stroke-width=\"1.8\" stroke-linecap=\"round\"/>", "msg": "<path d=\"M5 6.5h14a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H10l-4 3v-3H5A1.5 1.5 0 0 1 3.5 15V8A1.5 1.5 0 0 1 5 6.5z\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.8\" stroke-linejoin=\"round\"/>", "post": "<rect x=\"4.5\" y=\"4.5\" width=\"15\" height=\"15\" rx=\"4\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.8\"/><circle cx=\"12\" cy=\"12\" r=\"3.4\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.8\"/>", "link": "<path d=\"M10 14l4-4M8.5 11.5l-1.8 1.8a3 3 0 0 0 4.2 4.2l1.8-1.8M15.5 12.5l1.8-1.8a3 3 0 0 0-4.2-4.2l-1.8 1.8\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.8\" stroke-linecap=\"round\"/>", "save": "<path d=\"M12 4.5v10M7.5 10.5 12 15l4.5-4.5M5 18.5h14\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"};
+    const opts = [['story','Instagram Story','#a8336b'],['post','Instagram Post','#b86b3c'],['msg','Messages','#1f4f3d'],['link','Copy link','#5f5f60'],['save','Save image','#1a4332']];
+    o += `<div class="sheet" style="bottom:0;height:640px;background:#fffdf9"><div class="grab" style="top:14px"></div>` + txt(0, 30, 392, 28, F(400,22,'T')+'color:#343434', U.shareIdx === cards.length - 1 ? 'Share your year' : 'Share this stat', 'c') + btn(306, 28, 70, 34, F(600,14)+'color:#0f4b32', 'Done', 'closesheet');
+    o += `<div class="a sharepv" style="left:106px;top:78px;width:180px;height:290px;border-radius:12px;overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,.18)"><div style="position:absolute;left:0;top:0;width:360px;height:580px;transform:scale(.5);transform-origin:0 0;background:${c.bg};pointer-events:none">${c.html}</div></div>`;
+    o += txt(0, 380, 392, 16, F(400,12)+'color:#808080', `Card ${U.shareIdx + 1} of ${cards.length}`, 'c');
+    opts.forEach(([k2, label, col], i) => { const x = 14 + i * 73;
+      o += `<button class="a chip-press" data-act="doshare:${k2}" style="left:${x}px;top:416px;width:72px;height:96px;display:flex;flex-direction:column;align-items:center;gap:8px"><span style="width:56px;height:56px;border-radius:28px;background:${col};display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">${SI[k2]}</svg></span><span style="${F(600,11)}color:#343434;text-align:center;line-height:1.2;white-space:normal;width:70px">${label}</span></button>`; });
+    o += btn(20, 540, 352, 50, `background:#fff;border:1px solid #e5e5e5;border-radius:16px;${F(600,14)}color:#343434`, 'Cancel', 'closesheet') + `</div>`;
+  } else if (s === 'pick') {
+    const p = U.pick;
+    const H = 110 + Math.ceil(p.options.length / 2) * 50;
+    o += `<div class="sheet" style="bottom:0;height:${H}px"><div class="grab"></div>` + txt(0, 28, 392, 26, F(400,22,'T')+'color:#343434', p.title, 'c');
+    p.options.forEach((v, i) => { const on = p.multi ? p.value.includes(v) : p.value === v; o += btn(i % 2 ? 201 : 20, 70 + Math.floor(i / 2) * 50, 171, 42, `background:${on?'#f2f7f4':'#fff'};border:1.5px solid ${on?'#1a4332':'#e5e5e5'};border-radius:12px;${F(600,13)}color:#343434;gap:8px`, (p.swatch ? `<span style="width:14px;height:14px;border-radius:7px;background:${v};border:1px solid #bbb"></span>${COLOR_NAMES[v]}` : esc(v)), 'pickval:' + i); });
+    o += `</div>`;
+  } else if (s === 'confirmdelete' || s === 'reset' || s === 'confirmtrip') {
+    const msg = s === 'reset' ? ['Reset all data?', 'This clears your closet, trips and preferences in this browser.', 'Reset', 'doreset'] : s === 'confirmtrip' ? ['Delete this trip?', 'Its packing list and outfits go with it.', 'Delete', 'dodeltrip'] : [`Delete ${U.selected.length} item${U.selected.length===1?'':'s'}?`, 'They will be removed from your closet and trips.', 'Delete', 'dodelete'];
+    o += `<div class="sheet" style="bottom:0;height:240px"><div class="grab"></div>` + txt(0, 34, 392, 28, F(400,24,'T')+'color:#343434', msg[0], 'c') + txt(40, 70, 312, 36, F(400,13)+'color:#6b6b6b;white-space:normal', msg[1], 'c')
+      + btn(26, 124, 170, 48, `background:#fffdfc;border:1px solid #d9d9d9;border-radius:16px;${F(600,13)}color:#343434`, 'Cancel', 'closesheet')
+      + btn(202, 124, 170, 48, `background:#fffdfc;border:1px solid #cd1919;border-radius:16px;${F(600,13)}color:#cd1919`, msg[2], msg[3]) + `</div>`;
+  } else if (s === 'outfitbuilder') {
+    const b = U.builder;
+    o += `<div class="sheet" style="bottom:0;height:700px"><div class="grab"></div>` + btn(22, 24, 60, 30, F(600,14)+'color:#808080', 'Cancel', 'closesheet') + txt(0, 26, 392, 26, F(400,22,'T')+'color:#343434', 'Create outfit', 'c') + btn(300, 24, 76, 30, F(600,14)+`color:#0f4b32;${b.items.length?'':'opacity:.4'}`, 'Save', 'saveoutfit');
+    o += `<input class="field" id="f-oname" placeholder="Outfit name (e.g. Dinner Out)" value="${esc(b.name)}" style="left:20px;top:66px;width:352px;height:44px">`;
+    o += txt(20, 118, 352, 16, F(400,12)+'color:#6b6b6b', `Pick up to 4 pieces · ${b.items.length}/4 picked`);
+    o += `<div class="a" style="left:0;top:142px;width:392px;height:558px;overflow-y:auto">`;
+    S.items.forEach((it, i) => { const on = b.items.includes(it.id); const x = 18 + (i % 3) * 120, y = 4 + Math.floor(i / 3) * 118; o += `<button class="a chip-press" data-act="bpick:${it.id}" aria-pressed="${on}" style="left:${x}px;top:${y}px;width:112px;height:110px;background:${on?'#f2f7f4':'#fffdfc'};border:1.5px solid ${on?'#1a4332':'#f2f1ef'};border-radius:10px"></button>` + (it.custom ? box(x+16,y+8,80,72,'pointer-events:none',`<img src="${it.custom}" alt="" style="width:100%;height:100%;object-fit:contain">`) : fitImg(it, x + 16, y + 8, 80, 72, 'mix-blend-mode:multiply')) + txt(x + 4, y + 84, 104, 18, F(600,11)+'color:#343434;pointer-events:none;overflow:hidden', esc(it.name), 'c'); });
+    o += `</div></div>`;
+  }
+  return o;
+}
+
+/* ============================================================
+   ROUTER / RENDER
+   ============================================================ */
+function go(screen, params={}, opts={}) {
+  const prev = U.screen;
+  U.screen = screen; U.params = params; U.sheet = null;
+  if (screen !== 'addtrip') U.draft = opts.keepDraft ? U.draft : null;
+  if (prev !== screen) U.prefDraft = null;
+  if (screen !== 'closet') { U.select = false; U.selected = []; }
+  if (screen !== 'trips') U.justSignedIn = false;
+  render(prev !== screen);
+}
+function render(resetScroll=true) {
+  const sc = $('#sc'); const top = sc && !resetScroll ? sc.scrollTop : 0;
+  const ct = $('#cattabs'); const catLeft = ct ? ct.scrollLeft : 0;
+  const fn = R[U.screen] || R.trips;
+  dev.innerHTML = `<div class="screen">${fn(U.params || {})}</div>${sheetHTML()}`;
+  const nsc = $('#sc'); if (nsc) nsc.scrollTop = top;
+  const nct = $('#cattabs'); if (nct) {
+    nct.scrollLeft = catLeft; { const f = $('#catfade'); if (f) f.style.opacity = nct.scrollLeft >= nct.scrollWidth - nct.clientWidth - 2 ? 0 : 1; }
+    const line = $('#catline');
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      line.style.left = line.dataset.l + 'px'; line.style.width = line.dataset.w + 'px';
+      const on = nct.querySelector('[aria-pressed="true"]');
+      if (on) { const l = on.offsetLeft, r = l + on.offsetWidth; if (l < nct.scrollLeft + 10 || r > nct.scrollLeft + nct.clientWidth - 36) nct.scrollTo({left: Math.max(0, l - 60), behavior:'smooth'}); }
+    }));
+  }
+  U.catFrom = null;
+  save();
+}
+function rerender() { render(false); }
+
+/* ---------- camera / upload ---------- */
+let camTimers = [];
+function startCapture(customSrc) {
+  camTimers.forEach(clearTimeout); camTimers = [];
+  const base = customSrc ? {photo:null, custom:customSrc, name:'New Piece', cat:'Tops', type:'Top', color:'White', colorHex:'#ffffff', material:'Cotton'} : {photo:'white_shirt', ...pick(PHOTOS.white_shirt)};
+  U.draftItem = {...base, seasons:['Spring','Summer','Fall','Winter'], uses:['Work','Dinner','Everyday'].filter(u => USES.includes(u) || u === 'Everyday')};
+  if (customSrc) { go('review'); return; }
+  go('camera', {phase:'proc'});
+  camTimers.push(setTimeout(() => go('camera', {phase:'success'}), 3300));
+  camTimers.push(setTimeout(() => go('review'), 4300));
+}
+$('#file').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    // downscale so it fits in browser storage
+    const im = new Image(); im.onload = () => {
+      const s = Math.min(1, 480 / Math.max(im.width, im.height));
+      const c = document.createElement('canvas'); c.width = im.width * s; c.height = im.height * s;
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      startCapture(c.toDataURL('image/jpeg', .8));
+    }; im.src = r.result;
+  };
+  r.readAsDataURL(f); e.target.value = '';
+});
+
+$('#icsfile').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { const evs = parseICS(String(r.result)); e.target.value = '';
+    if (!evs.length) { toast('No upcoming events in that file'); return; }
+    U.icsEvents = evs; if (evs.length === 1) applyEvent(evs[0]); else { U.sheet = 'calendar'; rerender(); } };
+  r.readAsText(f);
+});
+
+/* ---------- outfit generation ---------- */
+function generateFor(t) {
+  const pool = t.items.length >= 3 ? t.items.map(item).filter(Boolean) : S.items.slice();
+  const by = c => pool.filter(i => i.cat === c);
+  const tops = by('Tops'), bottoms = by('Bottoms'), shoes = by('Shoes'), extra = [...by('Accessories'), ...by('Outerwear')];
+  if (!tops.length || !bottoms.length) { toast('Add a top and a bottom first'); return 0; }
+  const names = t.acts.length ? t.acts.flatMap(a => a === 'Meetings' ? ['Day 1 Meeting','Day 2 Meeting'] : [a === 'Travel Day' ? 'Travel Day' : a]) : ['Day 1','Day 2','Evening'];
+  const existing = new Set(tripOutfits(t).map(o => o.name));
+  let made = 0;
+  names.slice(0, Math.max(2, Math.min(5, days(t)))).forEach((nm, k) => {
+    if (existing.has(nm)) return;
+    const its = [tops[k % tops.length], bottoms[k % bottoms.length], shoes.length ? shoes[k % shoes.length] : null, extra.length ? extra[k % extra.length] : null].filter(Boolean).map(i => i.id);
+    const o = {id:id('o'), name:nm, items:its, trip:t.id, fav:false, wears:0};
+    S.outfits.push(o); t.outfits.push(o.id);
+    its.forEach(i => { if (!t.items.includes(i)) t.items.push(i); });
+    made++;
+  });
+  return made;
+}
+
+/* ---------- actions ---------- */
+function act(a, el) {
+  const [k, ...rest] = a.split(':'); const v = rest.join(':');
+  const [p1, p2, p3] = rest;
+  switch (k) {
+    case 'go': { const [scr, q] = v.split('?'); const params = {}; (q||'').split('&').filter(Boolean).forEach(kv => { const [a2, b2] = kv.split('='); params[a2] = isNaN(b2) ? b2 : +b2; }); go(scr, params); break; }
+    case 'tab': U.closetSeg = v === 'closet' ? U.closetSeg : U.closetSeg; go(v); break;
+    case 'back': go('trips'); break;
+    case 'signin': S.signedIn = true; S.provider = v; U.justSignedIn = true; go('trips'); setTimeout(() => { U.justSignedIn = false; if (U.screen === 'trips') rerender(); }, 2400); break;
+    case 'dismisscard': S.cardDismissed = true; rerender(); break;
+    case 'demo': S = demoData(); U.closetSeg = 'All'; U.cat = 'All'; U.filters = {cats:[],colors:[],seasons:[],uses:[]}; U.tripTab = 'Upcoming'; toast('Demo data loaded'); go(U.screen === 'profile' ? 'profile' : U.screen === 'closet' ? 'closet' : 'trips'); break;
+    case 'triptab': U.tripTab = v; rerender(); break;
+    // add trip
+    case 'bag': case 'act': { syncDraft(); const arr = k === 'bag' ? U.draft.bags : U.draft.acts; const i = arr.indexOf(v); i < 0 ? arr.push(v) : arr.splice(i, 1); rerender(); break; }
+    case 'cancelDraft': U.draft = null; go(U.params.edit ? 'trip' : 'trips', U.params.edit ? {id:U.params.edit} : {}); break;
+    case 'importcal': syncDraft(); U.sheet = 'calendar'; rerender(); break;
+    case 'calpick': { const ev = calEvents()[+v]; applyEvent(ev); break; }
+    case 'calfile': U.sheet = null; rerender(); $('#icsfile').click(); break;
+    case 'savetrip': {
+      syncDraft(); const d = U.draft;
+      if (!d.name.trim() || !d.dest.trim() || !d.start || !d.end) { toast(!d.name.trim() ? 'Add a trip name' : !d.dest.trim() ? 'Add a destination' : 'Pick start and end dates'); return; }
+      if (d.end < d.start) { toast('End date is before the start'); return; }
+      let t;
+      if (v) { t = trip(v); Object.assign(t, {name:d.name.trim(), dest:d.dest.trim(), start:d.start, end:d.end, bags:d.bags, acts:d.acts, photo: CITY_PHOTOS[d.dest.split(',')[0].trim().toLowerCase()] || t.photo || null}); }
+      else { t = {id:id('t'), name:d.name.trim(), dest:d.dest.trim(), start:d.start, end:d.end, bags:d.bags, acts:d.acts, photo: CITY_PHOTOS[d.dest.split(',')[0].trim().toLowerCase()] || null, items:[], packed:[], essentials:{}, outfits:[], past:false}; S.trips.push(t); S.cardDismissed = true; }
+      U.draft = null; U.tripTab = 'Upcoming'; toast(v ? 'Trip updated' : 'Trip saved'); go('trip', {id:t.id}); break;
+    }
+    case 'deltrip': U.delTrip = v; U.sheet = 'confirmtrip'; rerender(); break;
+    case 'dodeltrip': { const t = trip(U.delTrip); S.outfits = S.outfits.filter(o => o.trip !== t.id); S.trips = S.trips.filter(x => x !== t); toast('Trip deleted'); go('trips'); break; }
+    case 'packtoggle': { const t = trip(p1); const key = rest.slice(1).join(':'); if (key.startsWith('e:')) t.essentials[key] = !t.essentials[key]; else { const i = t.packed.indexOf(key); i < 0 ? t.packed.push(key) : t.packed.splice(i, 1); } rerender(); break; }
+    case 'additems': U.sheetTrip = v; U.sheet = 'additems'; rerender(); break;
+    case 'additem': { const t = trip(p1); if (!t.items.includes(p2)) t.items.push(p2); rerender(); break; }
+    case 'packfor': U.packTrip = v; go('packing'); break;
+    case 'finishtrip': { const t = trip(v); t.past = true; U.tripTab = 'Past'; toast('Moved to Past trips'); if (tripOutfits(t).length) go('recap', {id:t.id}); else go('trips'); break; }
+    case 'sugadd': { const t = trip(p1); if (!t.items.includes(p2)) t.items.push(p2); toast('Added to ' + t.name); rerender(); break; }
+    case 'looksfor': { const t = trip(v); const n = generateFor(t); if (n) toast(`${n} new look${n===1?'':'s'} for ${t.name}`); rerender(); break; }
+    // closet
+    case 'seg': U.closetSeg = v; U.select = false; U.selected = []; rerender(); break;
+    case 'cat': if (catDragged) return; U.catFrom = Math.max(0, CATS.indexOf(U.cat)); U.cat = v; rerender(); break;
+    case 'fav': { const it = item(v); it.fav = !it.fav; rerender(); break; }
+    case 'ofav': { const o = outfit(v); o.fav = !o.fav; rerender(); break; }
+    case 'select': if (!S.items.length) return; U.select = !U.select; U.selected = []; if (U.select) U.closetSeg = 'All'; rerender(); break;
+    case 'pick': { const i = U.selected.indexOf(v); i < 0 ? U.selected.push(v) : U.selected.splice(i, 1); rerender(); break; }
+    case 'item': U.draftItem = JSON.parse(JSON.stringify(item(v))); go('review', {id:v}); break;
+    case 'sheet':
+      if ((v === 'addtotrip' || v === 'confirmdelete') && !U.selected.length) { toast('Select items first'); return; }
+      U.sheet = v; rerender(); break;
+    case 'closesheet': U.sheet = null; rerender(); break;
+    case 'addto': { const t = trip(v); U.selected.forEach(i => { if (!t.items.includes(i)) t.items.push(i); }); U.select = false; U.selected = []; U.sheet = null; rerender(); toast('Added to Trip'); break; }
+    case 'dodelete': S.items = S.items.filter(i => !U.selected.includes(i.id)); S.trips.forEach(t => { t.items = t.items.filter(i => !U.selected.includes(i)); t.packed = t.packed.filter(i => !U.selected.includes(i)); }); S.outfits.forEach(o => o.items = o.items.filter(i => !U.selected.includes(i))); toast(`Deleted ${U.selected.length} item${U.selected.length===1?'':'s'}`); U.select = false; U.selected = []; U.sheet = null; rerender(); break;
+    case 'fcat': case 'fcolor': case 'fseason': case 'fuse': { const key = {fcat:'cats', fcolor:'colors', fseason:'seasons', fuse:'uses'}[k]; const arr = U.filters[key]; const i = arr.indexOf(v); i < 0 ? arr.push(v) : arr.splice(i, 1); rerender(); break; }
+    case 'clearfilters': U.filters = {cats:[],colors:[],seasons:[],uses:[]}; if (v !== 'keep') U.sheet = null; rerender(); break;
+    case 'unfilter': { const f = U.filters; for (const key of ['cats','seasons','uses']) f[key] = f[key].filter(x => x !== v); f.colors = f.colors.filter(c => COLOR_NAMES[c] !== v); rerender(); break; }
+    case 'generate': { const ups = upcoming(); if (!ups.length) { toast('Plan a trip first'); return; } if (ups.length === 1) { const n = generateFor(ups[0]); toast(n ? `${n} look${n===1?'':'s'} for ${ups[0].name}` : 'Looks already generated'); rerender(); } else { U.sheet = 'tripfor'; rerender(); } break; }
+    case 'genfor': { const t = trip(v); const n = generateFor(t); U.sheet = null; toast(n ? `${n} look${n===1?'':'s'} for ${t.name}` : 'Looks already generated'); rerender(); break; }
+    case 'createoutfit': if (!S.items.length) { toast('Add pieces to your closet first'); return; } U.builder = {name:'', items:[]}; U.sheet = 'outfitbuilder'; rerender(); break;
+    case 'bpick': { const b = U.builder; b.name = ($('#f-oname')||{}).value || b.name; const i = b.items.indexOf(v); if (i >= 0) b.items.splice(i, 1); else if (b.items.length < 4) b.items.push(v); else toast('Four pieces max'); rerender(); break; }
+    case 'saveoutfit': { const b = U.builder; b.name = ($('#f-oname')||{}).value || b.name; if (!b.items.length) return; const up = upcoming()[0]; const o = {id:id('o'), name:b.name.trim() || 'New Look', items:b.items, trip: U.outfitTrip || (up ? up.id : null), fav:false, wears:0}; S.outfits.push(o); const t = trip(o.trip); if (t) { t.outfits.push(o.id); b.items.forEach(i => { if (!t.items.includes(i)) t.items.push(i); }); } U.sheet = null; toast('Outfit created'); rerender(); break; }
+    case 'otrip': U.outfitTrip = v || null; U.sheet = null; rerender(); break;
+    // add item
+    case 'upload': U.sheet = null; $('#file').click(); break;
+    case 'shutter': startCapture(); break;
+    case 'retake': camTimers.forEach(clearTimeout); go('camera', {phase:'aim'}); break;
+    case 'dseason': { const s = U.draftItem.seasons; const i = s.indexOf(v); i < 0 ? s.push(v) : s.splice(i, 1); rerender(); break; }
+    case 'dcat': openPick('Category', ['Tops','Bottoms','Shoes','Outerwear','Accessories'], U.draftItem.cat, x => U.draftItem.cat = x); break;
+    case 'dtype': openPick('Type', ['Button-Down','T-Shirt','Sweater','Hoodie','Blazer','Trousers','Chinos','Shorts','Joggers','Sneakers','Oxfords','Belt','Watch','Top'], U.draftItem.type, x => U.draftItem.type = x); break;
+    case 'dmat': openPick('Material', ['Cotton','Linen','Wool','Denim','Leather','Silk','Nylon','Steel'], U.draftItem.material, x => U.draftItem.material = x); break;
+    case 'dcolor': openPick('Color', COLORS, U.draftItem.colorHex, x => { U.draftItem.colorHex = x; U.draftItem.color = COLOR_NAMES[x]; }, false, true); break;
+    case 'duse': openPick('Best for', USES, U.draftItem.uses || [], x => U.draftItem.uses = x, true); break;
+    case 'pickval': { const p = U.pick; const val = p.options[+v]; if (p.multi) { const i = p.value.indexOf(val); i < 0 ? p.value.push(val) : p.value.splice(i, 1); p.set(p.value.slice()); } else { p.set(val); U.sheet = null; } rerender(); break; }
+    case 'addtocloset': { const d = U.draftItem; const it = {...d, id:id('i'), fav:false, wears:0, packedCount:0, loved:0, added:new Date().toISOString().slice(0,10)}; if (it.custom) it.name = it.type && it.type !== 'Top' ? `${it.color} ${it.type}` : 'New Piece'; S.items.unshift(it); U.closetSeg = 'All'; U.cat = 'All'; go('closet'); toast('Added to your closet'); break; }
+    case 'saveitem': { const it = item(v); Object.assign(it, U.draftItem); go('closet'); toast('Saved'); break; }
+    case 'removeitem': U.selected = [v]; U.select = true; U.sheet = 'confirmdelete'; U.screen = 'closet'; rerender(); break;
+    // recap
+    case 'wore': case 'skipped': { const t = trip(p1); const st = t.recap.draft[p2]; st.wore = k === 'wore' ? (st.wore === true ? null : true) : (st.wore === false ? null : false); rerender(); break; }
+    case 'loved': { const t = trip(p1); const st = t.recap.draft[p2]; const val = p3 === '1'; st.loved = st.loved === val ? null : val; rerender(); break; }
+    case 'note': { const t = trip(U.params.id); const st = t.recap.draft[v]; const o = outfit(v);
+      U.recapEdit = {oid:v, items:(st.items || o.items).slice(), note:st.note || ''}; U.sheet = 'recapedit'; rerender(); break; }
+    case 'reitem': { const e = U.recapEdit; e.note = ($('#re-note')||{}).value ?? e.note; const i = e.items.indexOf(v); i < 0 ? e.items.push(v) : e.items.splice(i, 1); rerender(); break; }
+    case 'resave': { const e = U.recapEdit; const t = trip(U.params.id); const st = t.recap.draft[e.oid]; e.note = ($('#re-note')||{}).value ?? e.note;
+      if (!e.items.length) { toast('Pick at least one piece, or mark it Skipped'); return; }
+      st.items = e.items.slice(); st.note = e.note; st.wore = true; U.sheet = null; rerender(); toast(`Updated ${outfit(e.oid).name}`); break; }
+    case 'saverecap': {
+      const t = trip(v); const dr = t.recap.draft; const outs = tripOutfits(t);
+      if (!outs.every(o => dr[o.id] && dr[o.id].wore !== null)) { toast('Mark each look first'); return; }
+      const worn = new Set(); let confirmed = 0;
+      outs.forEach(o => { const st = dr[o.id]; const its = st.items || o.items; if (st.wore) { confirmed++; o.wears = (o.wears||0) + 1; its.forEach(i => worn.add(i)); if (st.loved) its.forEach(i => { const it = item(i); if (it) it.loved = (it.loved||0) + 1; }); } });
+      t.packed.forEach(i => { const it = item(i); if (!it) return; it.packedCount = (it.packedCount||0) + 1; if (worn.has(i)) it.wears = (it.wears||0) + 1; });
+      t.recap = {done:true, confirmed, wornItems: t.packed.filter(i => worn.has(i)).length, notes: Object.fromEntries(Object.entries(dr).map(([a2, b2]) => [a2, b2.note]))};
+      go('thanks', {id:t.id}); break;
+    }
+    // prefs
+    case 'styletoggle': { const a2 = U.prefDraft; const i = a2.indexOf(v); i < 0 ? a2.push(v) : a2.splice(i, 1); rerender(); break; }
+    case 'savestyle': S.prefs.styles = U.prefDraft.slice(); toast('Style saved'); go('profile'); break;
+    case 'colortoggle': { const a2 = U.prefDraft; const i = a2.indexOf(v); i < 0 ? a2.push(v) : a2.splice(i, 1); rerender(); break; }
+    case 'savecolors': S.prefs.colors = U.prefDraft.slice(); toast('Colors saved'); go('profile'); break;
+    case 'wpick': U.prefDraft.weather = v; U.prefDraft.temp = WX.find(w => w[0] === v)[6]; wxSync(); break;
+    case 'saveweather': { if (!U.prefDraft.weather) { toast('Pick how you handle temperature first'); break; } Object.assign(S.prefs, U.prefDraft); toast('Weather comfort saved'); go('profile'); break; }
+    case 'essadd': { const inp = $('#ess-' + v); const val = (inp && inp.value || '').trim(); if (!val) { inp && inp.focus(); return; } if (!S.prefs.essentials[v].includes(val)) S.prefs.essentials[v].push(val); rerender(); setTimeout(() => { const n = $('#ess-' + v); n && n.focus(); }, 20); break; }
+    case 'essdel': { const arr = S.prefs.essentials[p1]; const val = rest.slice(1).join(':'); S.prefs.essentials[p1] = arr.filter(x => x !== val); rerender(); break; }
+    case 'essedit': U.essEdit = v; rerender(); setTimeout(() => { const n = $('#ess-' + v); n && n.focus(); }, 20); break;
+    case 'essdefaults': S.prefs.essentials = JSON.parse(JSON.stringify(DEFAULT_ESSENTIALS)); rerender(); break;
+    case 'pref': { S.prefs[v] = !S.prefs[v]; rerender(); const on = S.prefs[v];
+      toast(v === 'alerts' ? (on ? 'Weather alerts on for your trips' : 'Weather alerts turned off') : (on ? 'Calendar sync on' : 'Calendar sync turned off')); break; }
+    case 'soon': toast(`${v} arrive in the full app`); break;
+    case 'toast': toast(v); break;
+    case 'doreset': S = blank(); U = {...U, screen:'welcome', sheet:null, closetSeg:'All', cat:'All', filters:{cats:[],colors:[],seasons:[],uses:[]}, select:false, selected:[], tripTab:'Upcoming'}; go('welcome'); toast('All data cleared'); break;
+    case 'yirshare': U.shareIdx = +v; U.sheet = 'yirshare'; rerender(); break;
+    case 'doshare': {
+      const link = 'https://www.jessicaharry.com/pack-light';
+      if (v === 'link') { const done = () => { U.sheet = null; rerender(); toast('Link copied'); }; try { navigator.clipboard.writeText(link).then(done, done); } catch (e) { done(); } break; }
+      U.sheet = null; rerender();
+      toast({story:'Shared to your Instagram Story', post:'Posted to Instagram', msg:'Sent in Messages', save:'Saved to Photos'}[v]); break; }
+    case 'share': { const text = `My Pack Light 2026 — ${v}. Built by Jessica Harry: https://www.jessicaharry.com/pack-light`; try { navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard'), () => toast('Shared')); } catch (e) { toast('Shared'); } break; }
+  }
+}
+function calEvents() {
+  const base = new Date(); base.setHours(0,0,0,0);
+  const at = (d, n) => { const x = new Date(base); x.setDate(x.getDate() + d); return x.toISOString().slice(0,10); };
+  return (U.icsEvents && U.icsEvents.length ? U.icsEvents : [
+    {name:'Chicago Client Visit', dest:'Chicago, IL', start:at(14), end:at(17), acts:['Meetings','Dinner'], sample:true},
+    {name:'Austin Offsite', dest:'Austin, TX', start:at(30), end:at(33), acts:['Meetings','Night Out'], sample:true},
+    {name:'Lisbon Long Weekend', dest:'Lisbon, Portugal', start:at(45), end:at(49), acts:['Sightseeing','Beach','Dinner'], sample:true},
+  ]);
+}
+function applyEvent(ev) {
+  if (!ev) return;
+  const d = U.draft || (U.draft = {name:'', dest:'', start:'', end:'', bags:[], acts:[]});
+  Object.assign(d, {name:ev.name, dest:ev.dest || d.dest, start:ev.start, end:ev.end || ev.start});
+  (ev.acts||[]).forEach(a => { if (!d.acts.includes(a)) d.acts.push(a); });
+  if (!d.bags.length) d.bags = ['Carry-on'];
+  U.sheet = null; render(true);
+  toast(`Imported “${ev.name}”`);
+  setTimeout(() => { const n = $('#f-name'); if (n) { n.style.borderColor = '#1a4332'; setTimeout(() => n.style.borderColor = '', 1200); } }, 50);
+}
+function parseICS(text) {
+  const lines = text.replace(/\r?\n[ \t]/g, '').split(/\r?\n/);
+  const out = []; let cur = null;
+  const dt = v => { const m = (v||'').match(/(\d{4})(\d{2})(\d{2})/); return m ? `${m[1]}-${m[2]}-${m[3]}` : ''; };
+  const un = v => (v||'').replace(/\\n/g,' ').replace(/\\([,;\\])/g,'$1').trim();
+  lines.forEach(l => {
+    if (l === 'BEGIN:VEVENT') cur = {};
+    else if (l === 'END:VEVENT') { if (cur && cur.start) out.push(cur); cur = null; }
+    else if (cur) { const i = l.indexOf(':'); const k = l.slice(0, i).split(';')[0]; const v = l.slice(i + 1);
+      if (k === 'SUMMARY') cur.name = un(v); else if (k === 'LOCATION') cur.dest = un(v).split(',').slice(0,2).join(',').trim(); else if (k === 'DTSTART') cur.start = dt(v); else if (k === 'DTEND') cur.end = dt(v); }
+  });
+  const today = new Date().toISOString().slice(0,10);
+  return out.map(e => ({...e, name:e.name || 'Untitled trip', end: e.end && e.end > e.start ? e.end : e.start})).filter(e => e.end >= today).sort((a,b) => a.start.localeCompare(b.start)).slice(0, 8);
+}
+function openPick(title, options, value, set, multi=false, swatch=false) {
+  U.pick = {title, options, value: multi ? value.slice() : value, set: x => { set(x); }, multi, swatch};
+  U.sheet = 'pick'; rerender();
+}
+function syncDraft() {
+  if (!U.draft) return;
+  const g = s => { const e = $(s); return e ? e.value : undefined; };
+  ['name','dest','start','end'].forEach(k => { const val = g('#f-' + k); if (val !== undefined) U.draft[k] = val; });
+}
+
+/* ---------- events ---------- */
+dev.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el || !dev.contains(el)) return;
+  e.preventDefault(); act(el.getAttribute('data-act'), el);
+});
+let catDrag = null, catDragged = false;
+dev.addEventListener('scroll', e => { const el = e.target; if (el.id !== 'cattabs') return; const f = $('#catfade'); if (f) f.style.opacity = el.scrollLeft >= el.scrollWidth - el.clientWidth - 2 ? 0 : 1; }, true);
+dev.addEventListener('pointerdown', e => { const el = e.target.closest('#cattabs'); if (!el) return; catDrag = {el, x:e.clientX, l:el.scrollLeft}; catDragged = false; });
+window.addEventListener('pointermove', e => { if (!catDrag) return; const k = dev.getBoundingClientRect().width / 392 || 1; const dx = (e.clientX - catDrag.x) / k; if (Math.abs(dx) > 4) { catDragged = true; catDrag.el.classList.add('dragging'); } if (catDragged) catDrag.el.scrollLeft = catDrag.l - dx; });
+["pointerup","pointercancel"].forEach(ev => window.addEventListener(ev, () => { if (!catDrag) return; catDrag.el.classList.remove('dragging'); catDrag = null; setTimeout(() => catDragged = false, 0); }));
+dev.addEventListener('wheel', e => { const el = e.target.closest('#cattabs'); if (!el || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; const max = el.scrollWidth - el.clientWidth; if ((e.deltaY > 0 && el.scrollLeft < max) || (e.deltaY < 0 && el.scrollLeft > 0)) { e.preventDefault(); el.scrollLeft += e.deltaY; } }, {passive:false});
+dev.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset && t.dataset.note) { const [tid, oid] = t.dataset.note.split(':'); const tr = trip(tid); if (tr && tr.recap && tr.recap.draft[oid]) { tr.recap.draft[oid].note = t.value; save(); } }
+  if (t.id === 'wx-temp' && U.prefDraft) { U.prefDraft.temp = +t.value; U.prefDraft.weather = wxFor(+t.value); wxSync(); }
+  if (t.id && t.id.startsWith('f-') && U.draft) { syncDraft(); if (t.type === 'date') rerender(); }
+});
+dev.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id && e.target.id.startsWith('ess-')) { e.preventDefault(); act('essadd:' + e.target.id.slice(4)); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && U.sheet) { U.sheet = null; rerender(); } });
+$('#restart').addEventListener('click', () => { S = blank(); go('welcome'); });
+
+/* ---------- fit the phone to the window ---------- */
+function fit() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  // always show the iPhone 16 frame, at every window size (desktop, side panel, phone)
+  const mobile = false;
+  document.body.classList.toggle('mobile', mobile);
+  const frame = $('#frame'), phone = $('#phone');
+  if (mobile) {
+    const s = vw / 392;
+    const H = Math.max(640, vh / s);
+    phone.style.transform = ''; dev.style.height = H + 'px'; dev.style.transform = `scale(${s})`; dev.style.transformOrigin = '0 0';
+    frame.style.width = vw + 'px'; frame.style.height = vh + 'px';
+  } else {
+    const s = Math.min(1, (vh - 24) / 888, (vw - 24) / 428);
+    dev.style.height = '852px'; dev.style.transform = ''; phone.style.transform = `scale(${s})`;
+    frame.style.width = 428 * s + 'px'; frame.style.height = 888 * s + 'px';
+  }
+}
+window.addEventListener('resize', fit); fit();
+
+/* ---------- boot ---------- */
+if (!S.signedIn) go('welcome'); else go('trips');
+</script>
+
+</body>
+</html>
