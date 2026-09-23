@@ -1570,6 +1570,7 @@ function fit() {
 window.addEventListener('resize', fit); fit();
 
 /* ---------- boot ---------- */
+if (window.self !== window.top) S = blank(); // embedded on jessicaharry.com: every visit starts fresh at Welcome
 if (!S.signedIn) go('welcome'); else go('trips');
 </script>
 
