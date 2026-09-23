@@ -31,7 +31,8 @@ input,textarea{font:inherit;color:inherit}
 .aside .eyebrow{font:700 11px Inter;letter-spacing:1.6px;text-transform:uppercase;color:var(--berry);margin:0 0 12px}
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .aside .eyebrow{color:#e38cb4} }
 :root[data-theme="dark"] .aside .eyebrow{color:#e38cb4}
-.aside h1{font:400 44px/1 var(--times);margin:0 0 14px}
+.aside h1{font:400 44px/1 var(--times);margin:0 0 14px;color:#1b4836}
+.aside h1 .spark{color:#d4a857;font-size:.5em;vertical-align:.35em;margin-left:.2em;font-style:normal}
 .aside h1 i{font-style:italic}
 .aside p{font:400 14px/1.55 Inter;color:var(--page-muted);margin:0 0 14px}
 .aside a{color:var(--page-ink);font-weight:600}
@@ -45,7 +46,7 @@ input,textarea{font:inherit;color:inherit}
 #phone .hw.l{left:-3px;width:3px}#phone .hw.r{right:-3px;width:3px}
 #phone .hw.cc{right:-2px;width:2px;background:#2a2b2e}
 #device{position:relative;width:392px;height:852px;background:var(--bg);border-radius:53px;overflow:hidden;isolation:isolate}
-.island{position:absolute;left:50%;top:11px;width:125px;height:36px;margin-left:-62.5px;border-radius:18px;background:#000;z-index:200;pointer-events:none}
+.island{position:absolute;left:50%;top:29px;width:125px;height:36px;margin-left:-62.5px;border-radius:18px;background:#000;z-index:200;pointer-events:none}
 .island::after{content:"";position:absolute;right:13px;top:12px;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#2d3a52 0,#111726 45%,#050608 70%)}
 body.mobile .shell{padding:0}
 body.mobile #phone{padding:0;border-radius:0;background:none;box-shadow:none;width:auto;height:auto}
@@ -122,7 +123,7 @@ body.mobile #device{border-radius:0}
 <div class="shell">
   <div class="aside">
     <p class="eyebrow">Working prototype</p>
-    <h1>Pack <i>Light</i></h1>
+    <h1>Pack <i>Light</i><span class="spark" aria-hidden="true">✦</span></h1>
     <p>An iOS packing app that learns what you actually wear. Everything here runs: add trips, build your closet, confirm what you wore, and watch your packing story and Year in Review fill in.</p>
     <p>Your changes save in this browser only. After you sign in, tap <b>Try with demo data</b> to explore a full closet and a year of trips.</p>
     <p><a href="https://www.jessicaharry.com/pack-light" target="_top">Read the case study →</a></p>
