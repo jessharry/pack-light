@@ -1568,6 +1568,9 @@ function fit() {
   }
 }
 window.addEventListener('resize', fit); fit();
+// embedded pages can be sized after load: refit whenever the frame's size changes
+try { new ResizeObserver(() => fit()).observe(document.documentElement); } catch (e) {}
+window.addEventListener('load', fit); [100, 400, 1000, 2500].forEach(t => setTimeout(fit, t));
 
 /* ---------- boot ---------- */
 if (window.self !== window.top) S = blank(); // embedded on jessicaharry.com: every visit starts fresh at Welcome
